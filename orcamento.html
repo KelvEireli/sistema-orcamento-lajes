@@ -1,0 +1,36 @@
+<link rel="stylesheet" href="styles.css">
+<h1>Novo Orçamento</h1>
+
+<input
+  id="cliente_nome"
+  placeholder="Buscar cliente"
+  oninput="buscarClientes(this.value)"
+>
+<ul id="listaClientes"></ul>
+
+<input id="ambiente" placeholder="Ambiente">
+
+<select id="tipo">
+  <option value="150">Laje Treliçada</option>
+  <option value="180">Laje Maciça</option>
+  <option value="210">Laje Nervurada</option>
+</select>
+
+<input type="number" id="area" placeholder="Área m²">
+
+<select id="pagamento">
+  <option value="1">À vista</option>
+  <option value="1.1">Parcelado</option>
+</select>
+
+<input type="date" id="data">
+
+<button onclick="salvarOrcamento()">Salvar Orçamento</button>
+
+
+
+<a href="cliente.html">Novo Cliente</a><br>
+<a href="index.html">Consultar Orçamentos</a>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
