@@ -120,43 +120,68 @@ async function salvarOrcamento() {
   alert("Orçamento salvo com sucesso");
 }
 
-async function buscarClientesConsulta(nome) {
-  if (nome.length < 2) return;
+let ultimaBuscaId = 0;
 
-  const { data } = await supabaseClient
+async function buscarClientesConsulta(nome) {
+  const buscaId = ++ultimaBuscaId;
+
+  const lista = document.getElementById("listaClientes");
+  const div = document.getElementById("orcamentos");
+
+  lista.innerHTML = "";
+  div.innerHTML = "";
+
+  if (!nome || nome.length < 2) return;
+
+  const { data, error } = await supabaseClient
     .from("clientes")
     .select("id, nome")
     .ilike("nome", `%${nome}%`)
+    .order("nome")
     .limit(5);
 
-  const lista = document.getElementById("listaClientes");
-  lista.innerHTML = "";
+  // 🚫 resposta velha? ignora
+  if (buscaId !== ultimaBuscaId) return;
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    lista.innerHTML = "<li>Nenhum cliente encontrado</li>";
+    return;
+  }
 
   data.forEach(c => {
     const li = document.createElement("li");
     li.textContent = c.nome;
 
-    li.onclick = () => carregarOrcamentos(c.id, c.nome);
+    li.onclick = () => {
+      carregarOrcamentos(c.id, c.nome);
+      lista.innerHTML = "";
+    };
 
     lista.appendChild(li);
   });
 }
+
 
 async function carregarOrcamentos(clienteId, nomeCliente) {
   const { data, error } = await supabaseClient
     .from("orcamentos")
     .select("*")
     .eq("cliente_id", clienteId)
-    .order("id", { ascending: false }); // ou remove o order
+    .order("criado_em", { ascending: false });
+
+  const div = document.getElementById("orcamentos");
+  div.innerHTML = `<h2>Orçamentos de ${nomeCliente}</h2><p>Carregando...</p>`;
 
   if (error) {
     console.error("Erro ao buscar orçamentos:", error.message);
-    alert("Erro ao buscar orçamentos");
+    div.innerHTML += "<p>Erro ao carregar orçamentos</p>";
     return;
   }
-
-  const div = document.getElementById("orcamentos");
-  div.innerHTML = `<h2>Orçamentos de ${nomeCliente}</h2>`;
 
   if (!data || data.length === 0) {
     div.innerHTML += "<p>Nenhum orçamento encontrado</p>";
@@ -164,18 +189,30 @@ async function carregarOrcamentos(clienteId, nomeCliente) {
   }
 
   data.forEach(o => {
+    const criadoEm = new Date(o.criado_em).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    const entrega = o.data_entrega
+      ? new Date(o.data_entrega).toLocaleDateString("pt-BR")
+      : "-";
+
     div.innerHTML += `
       <div class="card" style="margin-top:15px">
         <strong>Ambiente:</strong> ${o.ambiente}<br>
         <strong>Tipo:</strong> ${o.tipo_laje}<br>
         <strong>Área:</strong> ${o.area} m²<br>
         <strong>Total:</strong> R$ ${Number(o.total).toFixed(2)}<br>
-        <strong>Entrega:</strong> ${o.data_entrega}
+        <strong>Criado em:</strong> ${criadoEm}<br>
+        <strong>Entrega:</strong> ${entrega}
       </div>
     `;
   });
 }
-
 
 
 function calcularTotal() {
@@ -215,4 +252,19 @@ function mostrarResultado() {
   `;
 }
 
+function mostrarResultado() {
+  const resultado = document.getElementById("resultado");
+  if (!resultado) return;
+
+  const calc = calcularTotal();
+  if (!calc) {
+    resultado.innerHTML = "";
+    return;
+  }
+
+  resultado.innerHTML = `
+    Subtotal: R$ ${calc.subtotal.toFixed(2)}<br>
+    <strong>Total Final:</strong> R$ ${calc.total.toFixed(2)}
+  `;
+}
 

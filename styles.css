@@ -1,76 +1,155 @@
+/* =========================
+   RESET BÁSICO E VARIÁVEIS
+========================= */
+:root {
+  --bg-main: #0f172a;
+  --bg-card: #020617;
+  --bg-input: #020617;
+  --border-soft: #1e293b;
 
-#listaClientes input[type="checkbox"] {
-  width: auto;          /* ← ISSO resolve */
-  padding: 0;
-  margin: 0;
-  background: none;
-  
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+
+  --text-main: #e5e7eb;
+  --text-muted: #94a3b8;
+  --danger: #ef4444;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
 }
 
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* =========================
+   BODY E TIPOGRAFIA
+========================= */
+body {
+  font-family: 'Inter', Arial, sans-serif;
+  background: var(--bg-main);
+  color: var(--text-main);
+  padding: 40px;
+  line-height: 1.4;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+/* =========================
+   CARD / CONTAINER
+========================= */
+.card {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  max-width: 720px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.45);
+  border: 1px solid var(--border-soft);
+}
+
+/* =========================
+   LABELS
+========================= */
+label {
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* =========================
+   INPUTS / SELECT
+========================= */
+input,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-soft);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.25);
+}
+
+/* =========================
+   BOTÃO
+========================= */
+button {
+  margin-top: 24px;
+  padding: 12px;
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+button:hover {
+  background: var(--primary-hover);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* =========================
+   RESULTADO / BOX INFO
+========================= */
+.resultado {
+  margin-top: 24px;
+  background: var(--bg-card);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-soft);
+  font-size: 0.9rem;
+}
+
+/* =========================
+   LISTA DE CLIENTES
+========================= */
+#listaClientes {
+  margin-top: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
 
 #listaClientes label {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 10px;
-  width: 100%;
+  padding: 10px 12px;
   cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.9rem;
+}
+
+#listaClientes label:hover {
+  background: #020617;
 }
 
 #listaClientes input[type="checkbox"] {
+  width: auto;
   margin: 0;
-  align-self: flex-start;     /* ← garante esquerda absoluta */
 }
-
-
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      padding: 30px;
-    }
-    h1 {
-      margin-bottom: 20px;
-    }
-    .card {
-      background: #020617;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 700px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.4);
-    }
-    label {
-      display: block;
-      margin-top: 12px;
-      font-weight: bold;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: none;
-      background: #1e293b;
-      color: #fff;
-    }
-    button {
-      margin-top: 20px;
-      padding: 12px;
-      width: 100%;
-      border: none;
-      border-radius: 8px;
-      background: #6366f1;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #4f46e5;
-    }
-    .resultado {
-      margin-top: 20px;
-      background: #020617;
-      padding: 15px;
-      border-radius: 8px;
-      border: 1px solid #1e293b;
-    }

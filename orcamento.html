@@ -16,14 +16,17 @@
   <option value="210">Laje Nervurada</option>
 </select>
 
-<input type="number" id="area" placeholder="Área m²">
+<input type="number" id="area" placeholder="Área m²" oninput="mostrarResultado()">
 
-<select id="pagamento">
+<select id="pagamento" onchange="mostrarResultado()">
   <option value="1">À vista</option>
   <option value="1.1">Parcelado</option>
 </select>
 
 <input type="date" id="data">
+
+
+<div id="resultado" style="margin:15px 0; font-weight:bold;"></div>
 
 <button onclick="salvarOrcamento()">Salvar Orçamento</button>
 
