@@ -1,39 +1,78 @@
-<link rel="stylesheet" href="style.css">
-<h1>Novo Orçamento</h1>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novo Orçamento</title>
 
-<input
-  id="cliente_nome"
-  placeholder="Buscar cliente"
-  oninput="buscarClientes(this.value)"
->
-<ul id="listaClientes"></ul>
+  <link rel="stylesheet" href="style.css">
 
-<input id="ambiente" placeholder="Ambiente">
+  <!-- SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<select id="tipo">
-  <option value="150">Laje Treliçada</option>
-  <option value="180">Laje Maciça</option>
-  <option value="210">Laje Nervurada</option>
-</select>
+  <!-- APP -->
+  <script src="app.js" defer></script>
+</head>
 
-<input type="number" id="area" placeholder="Área m²" oninput="mostrarResultado()">
+<body class="page-orcamento">
 
-<select id="pagamento" onchange="mostrarResultado()">
-  <option value="1">À vista</option>
-  <option value="1.1">Parcelado</option>
-</select>
+  <h1>
+    <i data-lucide="file-plus"></i>
+    Novo Orçamento
+  </h1>
 
-<input type="date" id="data">
+  <input
+    id="cliente_nome"
+    placeholder="Buscar cliente"
+    oninput="buscarClientes(this.value)"
+  >
+  <ul id="listaClientes"></ul>
 
+  <input id="ambiente" placeholder="Ambiente">
 
-<div id="resultado" style="margin:15px 0; font-weight:bold;"></div>
+  <select id="tipo">
+    <option value="150">Laje Treliçada</option>
+    <option value="180">Laje Maciça</option>
+    <option value="210">Laje Nervurada</option>
+  </select>
 
-<button onclick="salvarOrcamento()">Salvar Orçamento</button>
+  <input
+    type="number"
+    id="area"
+    placeholder="Área m²"
+    oninput="mostrarResultado()"
+  >
 
+  <select id="pagamento" onchange="mostrarResultado()">
+    <option value="1">À vista</option>
+    <option value="1.1">Parcelado</option>
+  </select>
 
+  <input type="date" id="data">
 
-<a href="cliente.html">Novo Cliente</a><br>
-<a href="index.html">Consultar Orçamentos</a>
+  <div id="resultado" class="resultado"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+  <button onclick="salvarOrcamento()">
+    <i data-lucide="save"></i>
+    Salvar Orçamento
+  </button>
+
+  <a href="cliente.html">
+    <i data-lucide="user-plus"></i>
+    Novo Cliente
+  </a><br>
+
+  <a href="index.html">
+    <i data-lucide="search"></i>
+    Consultar Orçamentos
+  </a>
+
+  <!-- ÍCONES -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+
+</body>
+</html>
+

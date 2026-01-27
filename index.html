@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,13 +8,19 @@
 
   <link rel="stylesheet" href="style.css">
 
+  <!-- SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- APP -->
   <script src="app.js" defer></script>
 </head>
 
 <body>
 
-  <h1>Consulta de Orçamentos</h1>
+  <h1>
+    <i data-lucide="file-text"></i>
+    Consulta de Orçamentos
+  </h1>
 
   <input
     id="cliente_busca"
@@ -26,8 +32,21 @@
 
   <div id="orcamentos"></div>
 
-  <a href="cliente.html">Novo Cliente</a><br>
-  <a href="orcamento.html">Novo Orçamento</a>
+  <a href="cliente.html">
+    <i data-lucide="user-plus"></i>
+    Novo Cliente
+  </a><br>
+
+  <a href="orcamento.html">
+    <i data-lucide="plus-circle"></i>
+    Novo Orçamento
+  </a>
+
+  <!-- ÍCONES -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    lucide.createIcons();
+  </script>
 
 </body>
 </html>
