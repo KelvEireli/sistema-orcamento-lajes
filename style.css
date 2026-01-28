@@ -1,22 +1,25 @@
 /* =========================
-   RESET BÁSICO E VARIÁVEIS
+   RESET E VARIÁVEIS
 ========================= */
 :root {
-  --bg-main: #0f172a;
-  --bg-card: #020617;
+  --bg-main: #020617;
+  --bg-gradient-top: #0f172a;
+
+  --bg-card: rgba(15,23,42,0.9);
   --bg-input: #020617;
-  --border-soft: #1e293b;
+
+  --border-soft: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.14);
 
   --primary: #6366f1;
   --primary-hover: #4f46e5;
 
   --text-main: #e5e7eb;
   --text-muted: #94a3b8;
-  --danger: #ef4444;
 
   --radius-sm: 6px;
   --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-lg: 16px;
 }
 
 * {
@@ -26,32 +29,124 @@
 }
 
 /* =========================
-   BODY E TIPOGRAFIA
+   BODY
 ========================= */
 body {
+  min-height: 100vh;
   font-family: 'Inter', Arial, sans-serif;
-  background: var(--bg-main);
   color: var(--text-main);
-  padding: 40px;
   line-height: 1.4;
-}
 
-h1 {
-  font-size: 1.6rem;
-  margin-bottom: 20px;
-  font-weight: 600;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-gradient-top),
+    var(--bg-main) 65%
+  );
 }
 
 /* =========================
-   CARD / CONTAINER
+   CONTAINER GERAL
+========================= */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 40px 20px;
+}
+
+/* =========================
+   JANELA CENTRAL
+========================= */
+.screen {
+  width: 100%;
+  max-width: 820px;
+  min-height: 85vh;
+
+  background: linear-gradient(
+    180deg,
+    rgba(2,6,23,0.98),
+    rgba(2,6,23,0.95)
+  );
+
+  border-radius: 20px;
+  border: 1px solid var(--border-strong);
+
+  box-shadow:
+    0 40px 80px rgba(0,0,0,0.85),
+    inset 0 0 0 1px rgba(255,255,255,0.03);
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 28px 30px;
+}
+
+/* =========================
+   HEADER DA JANELA
+========================= */
+.screen-header {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+
+  padding-bottom: 18px;
+  margin-bottom: 26px;
+
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.screen-header a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+
+  color: #c7d2fe;
+  opacity: 0.85;
+
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.screen-header a:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+/* =========================
+   CONTEÚDO
+========================= */
+.screen-content {
+  flex: 1;
+}
+
+/* =========================
+   TÍTULOS
+========================= */
+.screen-content h1 {
+  font-size: 1.6rem;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 28px;
+}
+
+/* =========================
+   CARD INTERNO
 ========================= */
 .card {
   background: var(--bg-card);
-  padding: 24px;
   border-radius: var(--radius-lg);
-  max-width: 720px;
-  box-shadow: 0 15px 30px rgba(0,0,0,0.45);
   border: 1px solid var(--border-soft);
+
+  padding: 26px 24px;
 }
 
 /* =========================
@@ -59,11 +154,16 @@ h1 {
 ========================= */
 label {
   display: block;
-  margin-top: 16px;
+  margin-top: 18px;
   margin-bottom: 6px;
+
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--text-muted);
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* =========================
@@ -72,13 +172,21 @@ label {
 input,
 select {
   width: 100%;
-  padding: 10px 12px;
+  padding: 11px 14px;
+
   border-radius: var(--radius-md);
   border: 1px solid var(--border-soft);
+
   background: var(--bg-input);
   color: var(--text-main);
+
   font-size: 0.95rem;
+
   transition: border 0.2s, box-shadow 0.2s;
+}
+
+input::placeholder {
+  color: #64748b;
 }
 
 input:focus,
@@ -89,28 +197,41 @@ select:focus {
 }
 
 /* =========================
-   BOTÃO
+   BOTÃO PRINCIPAL
 ========================= */
 button {
-  margin-top: 24px;
-  padding: 12px;
+  margin-top: 32px;
+  padding: 14px;
+
   width: 100%;
   border: none;
   border-radius: var(--radius-md);
-  background: var(--primary);
+
+  background: linear-gradient(
+    180deg,
+    var(--primary),
+    var(--primary-hover)
+  );
+
   color: white;
   font-size: 0.95rem;
   font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: transform 0.1s, box-shadow 0.2s;
 }
 
 button:hover {
-  background: var(--primary-hover);
+  box-shadow: 0 10px 25px rgba(99,102,241,0.35);
 }
 
 button:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 /* =========================
@@ -118,10 +239,12 @@ button:active {
 ========================= */
 .resultado {
   margin-top: 24px;
-  background: var(--bg-card);
-  padding: 16px;
+  padding: 18px;
+
+  background: rgba(15,23,42,0.95);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-soft);
+
   font-size: 0.9rem;
 }
 
@@ -139,17 +262,18 @@ button:active {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+
+  padding: 10px 14px;
   cursor: pointer;
-  transition: background 0.2s;
+
   font-size: 0.9rem;
+  transition: background 0.2s;
 }
 
 #listaClientes label:hover {
-  background: #020617;
+  background: rgba(99,102,241,0.08);
 }
 
 #listaClientes input[type="checkbox"] {
   width: auto;
-  margin: 0;
 }

@@ -1,17 +1,77 @@
-<script src="https://unpkg.com/lucide@latest"></script>
-<script>
-  lucide.createIcons();
-</script>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novo Cliente</title>
 
-<link rel="stylesheet" href="style.css">
-<h1>Novo Cliente</h1>
+  <link rel="stylesheet" href="style.css">
 
-<input id="nome" placeholder="Nome do cliente">
-<input id="email" placeholder="Email">
-<button onclick="salvarCliente()">Salvar Cliente</button>
+  <!-- SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<a href="orcamento.html">Novo Orçamento</a><br>
-<a href="index.html">Consultar Orçamentos</a>
+  <!-- APP -->
+  <script src="app.js" defer></script>
+</head>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+<body>
+
+  <div class="app-container">
+
+    <!-- JANELA CENTRAL -->
+    <div class="screen">
+
+      <!-- HEADER -->
+      <header class="screen-header">
+        <a href="orcamento.html">
+          <i data-lucide="file-plus"></i>
+          Novo Orçamento
+        </a>
+
+        <a href="index.html">
+          <i data-lucide="search"></i>
+          Consultar Orçamentos
+        </a>
+      </header>
+
+      <!-- CONTEÚDO -->
+      <main class="screen-content">
+
+        <h1>
+          <i data-lucide="user-plus"></i>
+          Novo Cliente
+        </h1>
+
+        <div class="card">
+
+          <label for="nome">
+            <i data-lucide="user"></i>
+            Nome do cliente
+          </label>
+          <input id="nome" placeholder="Ex: João da Silva">
+
+          <label for="email">
+            <i data-lucide="mail"></i>
+            Email
+          </label>
+          <input id="email" placeholder="exemplo@email.com">
+
+          <button onclick="salvarCliente()">
+            <i data-lucide="save"></i>
+            Salvar Cliente
+          </button>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ÍCONES -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+
+</body>
+</html>
