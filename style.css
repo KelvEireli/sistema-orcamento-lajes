@@ -37,7 +37,8 @@ body {
     var(--bg-main);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; /* Alterado de center para flex-start */
+  padding: 20px;           /* Garante um respiro nas bordas em telemóveis */
   color: var(--text-main);
 }
 
@@ -227,10 +228,21 @@ button:hover svg {
 
 /* Responsividade */
 @media (max-width: 768px) {
-  .col-span-3, .col-span-2 { grid-column: span 6; }
-  .screen { padding: 20px; }
+  .col-span-3, .col-span-2 { 
+    grid-column: span 6; 
+  }
+  .screen { 
+    padding: 20px; 
+    border-radius: var(--radius-inner); /* Cantos menos arredondados em telas pequenas */
+  }
+  
+  /* Ajuste do Header para não cortar */
+  .screen-header {
+    flex-wrap: wrap; /* Permite que os botões do menu passem para a linha de baixo */
+    gap: 15px;
+    justify-content: center;
+  }
 }
-
 /* =================================================
    LISTA DE CLIENTES (DROPDOWN FLUTUANTE)
 ================================================= */
