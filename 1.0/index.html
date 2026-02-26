@@ -2,135 +2,70 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Sistema de Orçamentos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta de Orçamentos</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- APP -->
+  <script src="app.js" defer></script>
 </head>
- <style>
 
-#listaClientes input[type="checkbox"] {
-  width: auto;          /* ← ISSO resolve */
-  padding: 0;
-  margin: 0;
-  background: none;
-  
-}
-
-
-#listaClientes label {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-  width: 100%;
-  cursor: pointer;
-}
-
-#listaClientes input[type="checkbox"] {
-  margin: 0;
-  align-self: flex-start;     /* ← garante esquerda absoluta */
-}
-
-
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      padding: 30px;
-    }
-    h1 {
-      margin-bottom: 20px;
-    }
-    .card {
-      background: #020617;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 700px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.4);
-    }
-    label {
-      display: block;
-      margin-top: 12px;
-      font-weight: bold;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: none;
-      background: #1e293b;
-      color: #fff;
-    }
-    button {
-      margin-top: 20px;
-      padding: 12px;
-      width: 100%;
-      border: none;
-      border-radius: 8px;
-      background: #6366f1;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #4f46e5;
-    }
-    .resultado {
-      margin-top: 20px;
-      background: #020617;
-      padding: 15px;
-      border-radius: 8px;
-      border: 1px solid #1e293b;
-    }
-  </style>
 <body>
 
-<h2>Novo Cliente</h2>
-<input id="nome" placeholder="Nome">
-<input id="email" placeholder="Email">
-<button onclick="salvarCliente()">Salvar cliente</button>
+  <div class="app-container">
 
-<h2>Novo Orçamento</h2>
+    <!-- JANELA CENTRAL -->
+    <div class="screen">
 
-<input
-  id="cliente_nome"
-  placeholder="Digite o nome do cliente"
-  oninput="buscarClientes(this.value)"
->
-<ul id="listaClientes"></ul>
+      <!-- HEADER -->
+      <header class="screen-header">
+        <a href="cliente.html">
+          <i data-lucide="user-plus"></i>
+          Novo Cliente
+        </a>
 
+        <a href="orcamento.html">
+          <i data-lucide="file-plus"></i>
+          Novo Orçamento
+        </a>
+      </header>
 
-<label>Ambiente</label>
-<input id="ambiente" placeholder="Ex: Sala, Quarto">
+      <!-- CONTEÚDO -->
+      <main class="screen-content">
 
-<label>Tipo de Laje</label>
-<select id="tipo">
-  <option value="150">Laje Treliçada (R$150/m²)</option>
-  <option value="180">Laje Maciça (R$180/m²)</option>
-  <option value="210">Laje Nervurada (R$210/m²)</option>
-</select>
+        <h1>
+          <i data-lucide="file-text"></i>
+          Consulta de Orçamentos
+        </h1>
 
-<label>Área (m²)</label>
-<input type="number" id="area">
+        <label for="cliente_busca">
+          <i data-lucide="search"></i>
+          Buscar cliente
+        </label>
 
-<label>Forma de Pagamento</label>
-<select id="pagamento">
-  <option value="1">À vista (5% desconto)</option>
-  <option value="1.1">Cartão / Parcelado (+10%)</option>
-</select>
+        <input
+          id="cliente_busca"
+          placeholder="Digite o nome do cliente"
+          oninput="buscarClientesConsulta(this.value)"
+        >
 
-<label>Data de Entrega</label>
-<input type="date" id="data">
+        <ul id="listaClientes"></ul>
 
-<button onclick="salvarOrcamento()">Calcular e Salvar</button>
+        <div id="orcamentos" class="resultado"></div>
 
-<div id="resultado"></div>
+      </main>
+    </div>
+  </div>
 
-
-<!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- JS -->
-<script src="app.js"></script>
+  <!-- ÍCONES -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    lucide.createIcons();
+  </script>
 
 </body>
 </html>
