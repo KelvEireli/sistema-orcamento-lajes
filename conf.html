@@ -1,0 +1,51 @@
+    <!DOCTYPE html>
+<html lang="pt-BR">
+  
+<head>
+  <meta charset="UTF-8">
+  <title>Painel Administrativo</title>
+
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js" defer></script>
+
+</head>
+
+<body>
+
+<div class="app-container">
+  <div class="screen">
+
+    <main class="screen-content">
+      <h1>Área Administrativa</h1>
+
+      <div class="card">
+        <p>Configurações avançadas do sistema.</p>
+      </div>
+
+      
+    </main>
+
+    <h2>Tipos de Laje</h2>
+<div id="listaLajes"></div>
+<button onclick="abrirNovaLaje()">Nova Laje</button>
+
+<h2>Produtos Avulsos</h2>
+<div id="listaProdutos"></div>
+<div id="formEdicaoProduto"></div> 
+<button onclick="abrirNovoProduto()">Novo Produto</button>
+
+  </div>
+</div>
+
+<script>
+    
+document.addEventListener("DOMContentLoaded", () => {
+  protegerPaginaAdmin();
+  carregarLajesAdmin();
+  carregarProdutosAdmin();
+});
+</script>
+
+</body>
+</html>

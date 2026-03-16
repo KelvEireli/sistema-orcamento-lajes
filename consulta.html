@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta de Orçamentos</title>
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js" defer></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <div class="app-container">
+    <div class="screen">
+      <header class="screen-header">
+        <a href="cliente.html"><i data-lucide="user-plus"></i> Novo Cliente</a>
+        <a href="orcamento.html"><i data-lucide="file-plus"></i> Novo Orçamento</a>
+        <a href="consulta.html"><i data-lucide="search"></i> Consultar</a>
+        <a href="historico.html"><i data-lucide="archive"></i> Histórico</a>
+        <a href="#" onclick="logout()"><i data-lucide="log-out"></i> Sair</a>
+      </header>
+
+      <main class="screen-content">
+        <h1><i data-lucide="file-text"></i> Consulta de Orçamentos</h1>
+
+        <label for="cliente_busca"><i data-lucide="search"></i> Buscar cliente</label>
+        <input
+          id="cliente_busca"
+          placeholder="Digite nome ou WhatsApp"
+          autocomplete="off"
+          oninput="buscarClientesConsulta(this.value)"
+        >
+
+        <ul id="listaClientes"></ul>
+        <div id="orcamentos" class="resultado"></div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Inicializa os ícones e protege a página assim que o DOM carregar
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      
+      // Chama a função de proteção definida no app.js
+      if (typeof protegerPaginaAdmin === "function") {
+        protegerPaginaAdmin();
+      }
+    });
+  </script>
+</body>
+</html>
