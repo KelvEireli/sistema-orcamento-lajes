@@ -312,3 +312,10 @@ button:hover svg {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.status-pendente { background-color: #fff3cd !important; color: #856404; }
+.status-aprovado { background-color: #d4edda !important; color: #155724; }
+.status-cancelado { background-color: #f8d7da !important; color: #721c24; }
+
+.card-orcamento table th { color: #666; font-weight: 600; }
+.card-orcamento table td { color: #333; }

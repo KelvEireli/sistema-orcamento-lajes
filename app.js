@@ -188,37 +188,106 @@ async function protegerPaginaAdmin() {
    FUNÇÃO CENTRAL DE SELEÇÃO (RESOLVE O BALÃO)
 ================================================= */
 async function selecionarCliente(id, nome) {
-  const inputOrcamento = document.getElementById("cliente_nome");
-  const inputConsulta = document.getElementById("cliente_busca");
-
-  if (inputOrcamento) inputOrcamento.value = nome;
-  if (inputConsulta) inputConsulta.value = nome;
-
-  clienteSelecionadoId = id;
-
   const lista = document.getElementById("listaClientes");
-  if (lista) {
-    lista.innerHTML = "";
-    lista.style.display = "none";
+  const orcamentosDiv = document.getElementById("orcamentos");
+  
+  lista.style.display = "none";
+  document.getElementById("cliente_busca").value = nome;
+
+  // 🔹 FILTRO: .eq("status", "PENDENTE") adicionado
+  const { data: orcamentos, error } = await supabaseClient
+    .from("orcamentos")
+    .select(`
+      *,
+      orcamento_ambientes (
+        *,
+        tipos_laje (nome)
+      )
+    `)
+    .eq("cliente_id", id)
+    .eq("status", "PENDENTE") // 👈 Apenas os pendentes aparecem aqui
+    .order("criado_em", { ascending: false });
+
+  if (error) {
+    console.error("Erro ao buscar orçamentos:", error);
+    return;
   }
 
-  // 🔥 Buscar WhatsApp do cliente
-  const { data } = await supabaseClient
-    .from("clientes")
-    .select("whatsapp")
-    .eq("id", id)
-    .single();
+  renderizarOrcamentos(orcamentos);
+}
 
-  if (data?.whatsapp) {
-    const inputWpp = document.getElementById("whatsapp");
-    if (inputWpp) inputWpp.value = data.whatsapp;
+function renderizarOrcamentos(orcamentos) {
+  const container = document.getElementById("orcamentos");
+  
+  if (!orcamentos || orcamentos.length === 0) {
+    container.innerHTML = "<p>Nenhum orçamento encontrado para este cliente.</p>";
+    return;
   }
 
-  if (inputConsulta) {
-    carregarOrcamentos(id, nome);
-  } else if (window.location.pathname.includes("historico")) {
-    carregarHistorico(id, nome);
-  }
+  container.innerHTML = orcamentos.map(orc => `
+    <div class="card-orcamento" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #fff;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h2 style="margin:0; color:var(--primary)">Orçamento #${orc.id.slice(0,5)}</h2>
+          <small>Data: ${new Date(orc.criado_em).toLocaleDateString('pt-BR')}</small>
+        </div>
+        <span class="status-badge status-${orc.status.toLowerCase()}" 
+              style="padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; background: #e0e0e0;">
+          ${orc.status}
+        </span>
+      </div>
+
+      <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+
+      <h3 style="font-size: 1em; margin-bottom: 10px;"><i data-lucide="layers"></i> Ambientes e Vigas</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+        <thead>
+          <tr style="text-align: left; border-bottom: 2px solid #eee;">
+            <th style="padding: 5px;">Local</th>
+            <th>Laje</th>
+            <th>Medidas</th>
+            <th>Vigas</th>
+            <th style="text-align: right;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${orc.orcamento_ambientes.map(amb => `
+            <tr style="border-bottom: 1px solid #f9f9f9;">
+              <td style="padding: 8px 5px;">${amb.nome}</td>
+              <td>${amb.tipos_laje?.nome || 'N/A'}</td>
+              <td>${amb.largura}x${amb.comprimento}m</td>
+              <td style="font-weight: bold; color: #d32f2f;">${amb.qtd_vigas || 0} un</td>
+              <td style="text-align: right;">R$ ${amb.subtotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span>Metragem Total:</span>
+          <strong>${orc.metragem_calculada.toFixed(2)} m²</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span>Frete:</span>
+          <strong>R$ ${orc.frete.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; color: var(--primary); font-size: 1.1em;">
+          <span><strong>Total Final (${orc.forma_pagamento}):</strong></span>
+          <strong>R$ ${orc.total_final.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+        </div>
+      </div>
+      
+      ${orc.endereco_entrega ? `
+        <p style="font-size: 0.85em; margin-top: 10px; color: #666;">
+          <i data-lucide="map-pin" style="width:14px"></i> Entrega: ${orc.endereco_entrega}
+        </p>
+      ` : ''}
+    </div>
+  `).join('');
+
+  // Reinicializa os ícones da Lucide nos novos cards
+  lucide.createIcons();
 }
 /* =================================================
    GESTÃO DE CLIENTES
@@ -416,124 +485,112 @@ let calculoAtual = {
 
 
 function mostrarResultado() {
+  const frete = parseFloat(document.getElementById("frete").value) || 0;
+  const multiplicadorPagamento = parseFloat(document.getElementById("pagamento").value) || 1;
 
-  const frete = parseFloat(document.getElementById("frete").value) || 0
-  const multiplicadorPagamento =
-    parseFloat(document.getElementById("pagamento").value) || 1
+  let subtotalLajes = 0;
+  let custoLajes = 0;
+  let areaTotal = 0;
 
-  let subtotalLajes = 0
-  let custoLajes = 0
-  let areaTotal = 0
-
-  const ambientes = document.querySelectorAll(".ambiente")
+  const ambientes = document.querySelectorAll(".ambiente");
 
   if (ambientes.length === 0) {
-    document.getElementById("resultado").innerHTML =
-      "Adicione pelo menos um ambiente."
-    return
+    document.getElementById("resultado").innerHTML = "Adicione pelo menos um ambiente.";
+    return;
   }
 
-  // 🔹 CALCULA CADA AMBIENTE
   ambientes.forEach(div => {
+    const largura = parseFloat(div.querySelector(".amb-largura")?.value) || 0;
+    const comprimento = parseFloat(div.querySelector(".amb-comprimento")?.value) || 0;
+    const lajeId = div.querySelector(".amb-laje")?.value;
+    const spanVigas = div.querySelector(".amb-qtd-vigas");
 
-    const largura =
-      parseFloat(div.querySelector(".amb-largura")?.value) || 0
+    const area = largura * comprimento;
+    if (!lajeId) return;
 
-    const comprimento =
-      parseFloat(div.querySelector(".amb-comprimento")?.value) || 0
+    const laje = lajesGlobais.find(l => l.id == lajeId);
+    if (!laje) return;
 
-    const lajeId =
-      div.querySelector(".amb-laje")?.value
+    // --- LÓGICA DE CÁLCULO DE VIGAS BASEADA NO SEU INSERT ---
+    let qtdVigas = 0;
+    const nomeLaje = laje.nome.toLowerCase();
 
-    const area = largura * comprimento
+    if (nomeLaje.includes("painel treliçado")) {
+      // Regra: largura * 4
+      qtdVigas = largura * 4;
+    } 
+    else if (nomeLaje.includes("convencional")) {
+      // Regra: largura * 2.94 (para isopor ou cerâmica)
+      qtdVigas = largura * 2.94;
+    } 
+    else if (nomeLaje.includes("treliça") && nomeLaje.includes("isopor")) {
+      // Regra: largura / 0.47
+      qtdVigas = largura / 0.47;
+    } 
+    else if (nomeLaje.includes("treliça") && nomeLaje.includes("cerâmica")) {
+      // Regra: largura / 0.37
+      qtdVigas = largura / 0.37;
+    }
 
-    if (!area || !lajeId) return
+    // Atualiza o contador de vigas no card do ambiente
+    if (spanVigas) {
+      spanVigas.innerText = Math.ceil(qtdVigas);
+    }
 
-    const laje = lajesGlobais.find(l => l.id == lajeId)
+    // Cálculos Financeiros
+    const subtotal = area * laje.preco_venda_m2;
+    const custo = area * laje.custo_m2;
 
-    if (!laje) return
-
-    const subtotal = area * laje.preco_venda_m2
-    const custo = area * laje.custo_m2
-
-    subtotalLajes += subtotal
-    custoLajes += custo
-    areaTotal += area
-
-  })
+    subtotalLajes += subtotal;
+    custoLajes += custo;
+    areaTotal += area;
+  });
 
   // 🔹 PRODUTOS AVULSOS
-  let totalAvulsosVenda = 0
-  let totalAvulsosCusto = 0
-
+  let totalAvulsosVenda = 0;
+  let totalAvulsosCusto = 0;
   document.querySelectorAll(".qtd-avulso").forEach(input => {
+    const qtd = parseInt(input.value) || 0;
+    const preco = parseFloat(input.dataset.preco) || 0;
+    const custo = parseFloat(input.dataset.custo) || 0;
+    totalAvulsosVenda += qtd * preco;
+    totalAvulsosCusto += qtd * custo;
+  });
 
-    const qtd = parseInt(input.value) || 0
-    const preco = parseFloat(input.dataset.preco)
-    const custo = parseFloat(input.dataset.custo)
+  const subtotalGeral = subtotalLajes + totalAvulsosVenda;
+  const totalFinal = (subtotalGeral + frete) * multiplicadorPagamento;
+  const custoTotal = custoLajes + totalAvulsosCusto;
+  const lucro = totalFinal - custoTotal;
 
-    totalAvulsosVenda += qtd * preco
-    totalAvulsosCusto += qtd * custo
-
-  })
-
-  // 🔹 SUBTOTAL
-  const subtotalGeral = subtotalLajes + totalAvulsosVenda
-
-  // 🔹 TOTAL FINAL
-  const totalFinal =
-    (subtotalGeral + frete) * multiplicadorPagamento
-
-  // 🔹 CUSTO TOTAL
-  const custoTotal =
-    custoLajes + totalAvulsosCusto
-
-  // 🔹 LUCRO
-  const lucro =
-    totalFinal - custoTotal
-
-  // 🔹 salvar para o sistema usar depois
   calculoAtual = {
     subtotal: subtotalGeral,
     custoTotal: custoTotal,
     lucro: lucro,
     totalFinal: totalFinal
-  }
+  };
 
-  // 🔹 UI
   document.getElementById("resultado").innerHTML = `
     <div style="text-align:left;font-size:0.9em">
-
-      Área total: ${areaTotal.toFixed(2)} m²<br>
-
+      Área total: <strong>${areaTotal.toFixed(2)} m²</strong><br>
       Lajes: R$ ${subtotalLajes.toLocaleString('pt-BR',{minimumFractionDigits:2})}<br>
-
       Produtos: R$ ${totalAvulsosVenda.toLocaleString('pt-BR',{minimumFractionDigits:2})}<br>
-
       Frete: R$ ${frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}
-
     </div>
-
     <hr>
-
     <div style="font-size:1.2em;color:var(--primary)">
-      Total:
-      <strong>
-        R$ ${totalFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}
-      </strong>
+      Total: <strong>R$ ${totalFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>
     </div>
-  `
+  `;
 }
-async function salvarOrcamento() {
 
+
+async function salvarOrcamento() {
   if (!clienteSelecionadoId) {
     return alert("Selecione um cliente antes de salvar.");
   }
 
   try {
-
-    const { data: { user }, error: userError } =
-      await supabaseClient.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
       alert("Sessão expirada. Faça login novamente.");
@@ -543,50 +600,39 @@ async function salvarOrcamento() {
 
     const frete = parseFloat(document.getElementById("frete").value) || 0;
     const pagamentoIdx = document.getElementById("pagamento").value;
+    const multiplicadorPagamento = parseFloat(pagamentoIdx) || 1;
     const dataEntrega = document.getElementById("data").value;
-    const enderecoEntrega =
-      document.getElementById("endereco_entrega").value;
+    const enderecoEntrega = document.getElementById("endereco_entrega").value;
 
     const ambientes = document.querySelectorAll(".ambiente");
-
     if (ambientes.length === 0) {
       return alert("Adicione pelo menos um ambiente.");
     }
 
-    let subtotalGeral = 0;
-    let custoTotalGeral = 0;
-    let lucroTotal = 0;
+    let subtotalLajes = 0;
+    let custoLajes = 0;
     let metragemTotal = 0;
     const dadosAmbientes = [];
 
+    // 1️⃣ COLETAR DADOS DOS AMBIENTES (LAJES)
     for (const div of ambientes) {
-
-      const nome =
-        div.querySelector(".amb-nome").value || "Ambiente";
-
-      const largura =
-        parseFloat(div.querySelector(".amb-largura").value) || 0;
-
-      const comprimento =
-        parseFloat(div.querySelector(".amb-comprimento").value) || 0;
-
-      const lajeId =
-        div.querySelector(".amb-laje").value;
+      const nome = div.querySelector(".amb-nome").value || "Ambiente";
+      const largura = parseFloat(div.querySelector(".amb-largura").value) || 0;
+      const comprimento = parseFloat(div.querySelector(".amb-comprimento").value) || 0;
+      const lajeId = div.querySelector(".amb-laje").value;
+      const qtdVigas = parseFloat(div.querySelector(".amb-qtd-vigas")?.innerText) || 0;
 
       const area = largura * comprimento;
-      ametragemTotal += area;
-      const laje =
-        lajesGlobais.find(l => l.id == lajeId);
-
+      metragemTotal += area;
+      
+      const laje = lajesGlobais.find(l => l.id == lajeId);
       if (!laje) continue;
 
-      const subtotal = area * laje.preco_venda_m2;
-      const custo = area * laje.custo_m2;
-      const lucro = subtotal - custo;
+      const subtotalAmbiente = area * laje.preco_venda_m2;
+      const custoAmbiente = area * laje.custo_m2;
 
-      subtotalGeral += subtotal;
-      custoTotalGeral += custo;
-      lucroTotal += lucro;
+      subtotalLajes += subtotalAmbiente;
+      custoLajes += custoAmbiente;
 
       dadosAmbientes.push({
         nome,
@@ -594,86 +640,108 @@ async function salvarOrcamento() {
         comprimento,
         area,
         tipo_laje_id: lajeId,
-        subtotal,
-        custo,
-        lucro
+        subtotal: subtotalAmbiente,
+        custo: custoAmbiente,
+        lucro: subtotalAmbiente - custoAmbiente,
+        qtd_vigas: qtdVigas
       });
-
     }
 
-    const multiplicadorPagamento =
-      parseFloat(document.getElementById("pagamento").value) || 1;
+    // 2️⃣ COLETAR PRODUTOS AVULSOS
+    let totalAvulsosVenda = 0;
+    let totalAvulsosCusto = 0;
+    const dadosItens = [];
+    const inputsProdutos = document.querySelectorAll(".qtd-avulso");
 
-    const totalFinal =
-      (subtotalGeral + frete) * multiplicadorPagamento;
+    inputsProdutos.forEach(input => {
+      const qtd = parseInt(input.value) || 0;
+      if (qtd > 0) {
+        const precoVenda = parseFloat(input.dataset.preco) || 0;
+        const custoUnitario = parseFloat(input.dataset.custo) || 0;
+        
+        totalAvulsosVenda += qtd * precoVenda;
+        totalAvulsosCusto += qtd * custoUnitario;
 
-    // SALVAR ORÇAMENTO
-    const { data: orcamentoCriado, error: erroOrc } =
-      await supabaseClient
-        .from("orcamentos")
-        .insert({
-          cliente_id: clienteSelecionadoId,
-          usuario_id: user.id,
-          metragem_calculada: metragemTotal,
-          subtotal: subtotalGeral,
-          total_final: totalFinal,
-          custo_total: custoTotalGeral,
-          lucro: lucroTotal,
-          frete: frete,
-          forma_pagamento:
-            pagamentoIdx === "1" ? "À vista" : "Parcelado",
-          data_entrega: dataEntrega || null,
-          endereco_entrega: enderecoEntrega || null,
-          status: "PENDENTE",
-          validade: new Date(
-            Date.now() + 7 * 24 * 60 * 60 * 1000
-          ).toISOString().split("T")[0]
-        })
-        .select()
-        .single();
+        dadosItens.push({
+          produto_id: input.dataset.id,
+          quantidade: qtd,
+          preco_unitario: precoVenda
+        });
+      }
+    });
+
+    // 3️⃣ CÁLCULOS FINAIS
+    const subtotalGeral = subtotalLajes + totalAvulsosVenda;
+    const totalFinal = (subtotalGeral + frete) * multiplicadorPagamento;
+    const custoTotalGeral = custoLajes + totalAvulsosCusto;
+    const lucroFinal = totalFinal - custoTotalGeral;
+
+    // 4️⃣ SALVAR CABEÇALHO DO ORÇAMENTO
+    const { data: orcamentoCriado, error: erroOrc } = await supabaseClient
+      .from("orcamentos")
+      .insert({
+        cliente_id: clienteSelecionadoId,
+        usuario_id: user.id,
+        metragem_calculada: metragemTotal,
+        subtotal: subtotalGeral,
+        total_final: totalFinal,
+        custo_total: custoTotalGeral,
+        lucro: lucroFinal,
+        frete: frete,
+        forma_pagamento: pagamentoIdx === "1" ? "À vista" : "Parcelado",
+        data_entrega: dataEntrega || null,
+        endereco_entrega: enderecoEntrega || null,
+        status: "PENDENTE",
+        validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+      })
+      .select()
+      .single();
 
     if (erroOrc) throw erroOrc;
 
-    // SALVAR AMBIENTES
+    // 5️⃣ SALVAR OS AMBIENTES
     for (const amb of dadosAmbientes) {
-
-      await supabaseClient
+      const { error: erroAmb } = await supabaseClient
         .from("orcamento_ambientes")
         .insert({
           orcamento_id: orcamentoCriado.id,
           ...amb
         });
+      if (erroAmb) console.error("Erro ao salvar ambiente:", erroAmb);
+    }
 
+    // 6️⃣ SALVAR OS ITENS AVULSOS
+    for (const item of dadosItens) {
+      const { error: erroItem } = await supabaseClient
+        .from("orcamento_itens")
+        .insert({
+          orcamento_id: orcamentoCriado.id,
+          ...item
+        });
+      if (erroItem) console.error("Erro ao salvar item avulso:", erroItem);
     }
 
     alert("Orçamento salvo com sucesso!");
-
     window.location.href = "consulta.html";
 
   } catch (err) {
-
     console.error("Erro ao salvar orçamento:", err);
-
-    alert(
-      "Erro técnico: " +
-      (err.message || "Falha na conexão com o banco")
-    );
-
+    alert("Erro técnico: " + (err.message || "Falha na conexão com o banco"));
   }
-
 }
 
 async function carregarOrcamentos(clienteId, nomeCliente) {
   const div = document.getElementById("orcamentos");
 
-const { data, error } = await supabaseClient
+  // Busca orçamentos PENDENTES com detalhes dos ambientes e nomes das lajes
+  const { data, error } = await supabaseClient
     .from("orcamentos")
     .select(`
-      id,
-      metragem_calculada,
-      total_final,
-      status,
-      criado_em
+      *,
+      orcamento_ambientes (
+        *,
+        tipos_laje (nome)
+      )
     `)
     .eq("cliente_id", clienteId)
     .eq("status", "PENDENTE")
@@ -687,7 +755,7 @@ const { data, error } = await supabaseClient
   let html = `<h2>${nomeCliente}</h2>`;
 
   if (!data || data.length === 0) {
-    html += "<p>Nenhum orçamento encontrado.</p>";
+    html += "<p>Nenhum orçamento pendente encontrado.</p>";
     div.innerHTML = html;
     return;
   }
@@ -695,25 +763,41 @@ const { data, error } = await supabaseClient
   data.forEach(o => {
     const dataFormatada = new Date(o.criado_em).toLocaleDateString("pt-BR");
 
-      html += `
-        <div class="card" style="margin-top:15px">
+    html += `
+      <div class="card-orcamento" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #fff;">
+        <div style="display: flex; justify-content: space-between;">
+          <strong>Orçamento #${o.id.slice(0,5)}</strong>
+          <span style="color:orange; font-weight:bold">${o.status}</span>
+        </div>
+        <small>Criado em: ${dataFormatada}</small>
+        
+        <table style="width: 100%; margin-top:10px; font-size: 0.85em; border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #eee; text-align:left;">
+            <th>Ambiente</th>
+            <th>Vigas</th>
+            <th style="text-align:right">Subtotal</th>
+          </tr>
+          ${o.orcamento_ambientes.map(amb => `
+            <tr>
+              <td>${amb.nome} <br><small>${amb.tipos_laje?.nome || ''}</small></td>
+              <td><strong>${amb.qtd_vigas || 0} un</strong></td>
+              <td style="text-align:right">R$ ${amb.subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+            </tr>
+          `).join('')}
+        </table>
 
-          <strong>Orçamento</strong><br>
-          Área total: ${Number(o.metragem_calculada).toFixed(2)} m²<br>
-          Criado em: ${dataFormatada}<br>
-          Status: ${o.status}<br>
+        <div style="margin-top:10px; padding:10px; background:#f9f9f9; border-radius:5px;">
+          <strong>Total: R$ ${Number(o.total_final).toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>
+        </div>
 
-          <strong>Total:</strong> 
-          R$ ${Number(o.total_final).toLocaleString('pt-BR',{minimumFractionDigits:2})}
-          
-          <br><br>
-
-          <button onclick="arquivarOrcamento('${o.id}', '${clienteId}', '${nomeCliente}')">
+        <div style="margin-top:10px; display:flex; gap:10px">
+          <button onclick="arquivarOrcamento('${o.id}', '${clienteId}', '${nomeCliente}')" style="background:#666">
             Arquivar
           </button>
-
+          <button onclick="window.print()" style="background:var(--primary)">Imprimir</button>
         </div>
-      `;
+      </div>
+    `;
   });
 
   div.innerHTML = html;
@@ -740,48 +824,99 @@ async function carregarHistorico(clienteId, nomeCliente) {
   nomeHistoricoAtual = nomeCliente;
 
   const div = document.getElementById("orcamentos");
+  div.innerHTML = "<p>Carregando histórico completo...</p>";
 
-  const { data, error } = await supabaseClient
+  // 🔹 BUSCA ANINHADA: Orçamento + Ambientes + Itens Avulsos
+  const { data: orcamentos, error } = await supabaseClient
     .from("orcamentos")
-      .select(`
-        id,
-        metragem_calculada,
-        total_final,
-        status,
-        criado_em
-      `)
+    .select(`
+      *,
+      orcamento_ambientes (
+        *,
+        tipos_laje (nome)
+      ),
+      orcamento_itens (
+        *,
+        produtos_avulsos (nome)
+      )
+    `)
     .eq("cliente_id", clienteId)
     .eq("status", "ARQUIVADO")
     .order("criado_em", { ascending: false });
 
   if (error) {
-    div.innerHTML = "Erro ao carregar histórico.";
+    console.error("Erro Supabase:", error);
+    div.innerHTML = "Erro ao carregar dados.";
+    return;
+  }
+
+  if (!orcamentos || orcamentos.length === 0) {
+    div.innerHTML = `<h2>Histórico de ${nomeCliente}</h2><p>Nenhum orçamento arquivado.</p>`;
     return;
   }
 
   let html = `<h2>Histórico de ${nomeCliente}</h2>`;
 
-  if (!data || data.length === 0) {
-    html += "<p>Nenhum orçamento arquivado.</p>";
-    div.innerHTML = html;
-    return;
-  }
-
-  data.forEach(o => {
-    const dataFormatada = new Date(o.criado_em).toLocaleDateString("pt-BR");
+  orcamentos.forEach(o => {
+    const dataF = new Date(o.criado_em).toLocaleDateString("pt-BR");
 
     html += `
-      <div class="card" style="margin-top:15px; opacity:0.85">
-        <strong>${o.ambiente || "Ambiente não informado"}</strong><br>
-        ${o.tipos_laje?.nome || "Tipo não definido"}<br>
-        ${o.metragem_calculada} m²<br>
-        Criado em: ${dataFormatada}<br>
-        Status: ${o.status}<br>
-        <strong>Total:</strong> R$ ${Number(o.total_final).toFixed(2)}<br><br>
+      <div class="card" style="margin-top:20px; border-top: 4px solid #444; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+          <strong>Orçamento #${o.id.slice(0,5)}</strong>
+          <span style="font-size:0.8em; color:#666">${dataF}</span>
+        </div>
 
-        <button onclick="restaurarOrcamento('${o.id}')">
-          Restaurar
-        </button>
+        <div style="margin-bottom:15px">
+          <div style="font-weight:bold; font-size:0.85em; border-bottom:1px solid #eee; margin-bottom:5px; color:var(--primary)">
+            LAJES E VIGAS
+          </div>
+          <table style="width:100%; font-size:0.85em;">
+            ${o.orcamento_ambientes.map(amb => `
+              <tr>
+                <td>${amb.nome} (${amb.tipos_laje?.nome})</td>
+                <td style="text-align:center"><strong>${amb.qtd_vigas || 0} un de vigas</strong></td>
+                <td style="text-align:right">R$ ${amb.subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>
+
+        ${o.orcamento_itens && o.orcamento_itens.length > 0 ? `
+          <div style="margin-bottom:15px">
+            <div style="font-weight:bold; font-size:0.85em; border-bottom:1px solid #eee; margin-bottom:5px; color:#c2780e">
+              PRODUTOS ADICIONAIS
+            </div>
+            <table style="width:100%; font-size:0.85em;">
+              ${o.orcamento_itens.map(item => `
+                <tr>
+                  <td>${item.quantidade}x ${item.produtos_avulsos?.nome || 'Produto'}</td>
+                  <td style="text-align:right">R$ ${(item.quantidade * item.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>
+              `).join('')}
+            </table>
+          </div>
+        ` : ''}
+
+        <div style="background:#f8f9fa; padding:10px; border-radius:4px; font-size:0.9em">
+          <div style="display:flex; justify-content:space-between">
+            <span>Frete:</span>
+            <span>R$ ${o.frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.1em; color:var(--primary); border-top:1px solid #ddd; margin-top:5px; padding-top:5px">
+            <span>TOTAL:</span>
+            <span>R$ ${o.total_final.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; color:green; font-size:0.8em; margin-top:5px">
+            <span>Lucro Líquido:</span>
+            <span>R$ ${o.lucro ? o.lucro.toLocaleString('pt-BR',{minimumFractionDigits:2}) : '0,00'}</span>
+          </div>
+        </div>
+
+        <div style="margin-top:10px; display:flex; gap:10px">
+          <button onclick="restaurarOrcamento('${o.id}')" style="flex:1; background:#666">Restaurar</button>
+          <button onclick="window.print()" style="flex:1">Imprimir</button>
+        </div>
       </div>
     `;
   });
@@ -936,46 +1071,35 @@ async function atualizarObservacao(id, texto) {
   if (error) console.error("Erro ao salvar observação:", error.message);
 }
 
-function adicionarAmbiente(){
+function adicionarAmbiente() {
+  const container = document.getElementById("listaAmbientes");
+  const id = Date.now(); // ID único para os campos
 
-  const container = document.getElementById("listaAmbientes")
-
-  let opcoes = ""
-
-  lajesGlobais.forEach(laje => {
-
-    opcoes += `
-      <option value="${laje.id}">
-        ${laje.nome} - R$ ${Number(laje.preco_venda_m2).toFixed(2)}/m²
-      </option>
-    `
-
-  })
-
-  const html = `
-  <div class="ambiente">
-
-    <label>Ambiente</label>
-    <input class="amb-nome" placeholder="Ex: Sala">
-
-    <label>Largura</label>
+  const div = document.createElement("div");
+  div.className = "ambiente card"; // Ajuste conforme seu CSS
+  div.innerHTML = `
+    <input type="text" class="amb-nome" placeholder="Nome do Ambiente (ex: Sala)">
+    
+    <label>Largura (m)</label>
     <input type="number" class="amb-largura" oninput="mostrarResultado()">
-
-    <label>Comprimento</label>
+    
+    <label>Comprimento (m)</label>
     <input type="number" class="amb-comprimento" oninput="mostrarResultado()">
 
     <label>Tipo de Laje</label>
     <select class="amb-laje" onchange="mostrarResultado()">
-      ${opcoes}
+      <option value="">Selecione...</option>
+      ${lajesGlobais.map(l => `<option value="${l.id}">${l.nome}</option>`).join('')}
     </select>
 
-  </div>
-  `
-
-  container.insertAdjacentHTML("beforeend", html)
-
+    <div class="info-vigas" style="margin-top:10px; font-weight:bold; color: var(--primary)">
+      Vigas necessárias: <span class="amb-qtd-vigas">0</span>
+    </div>
+    
+    <button type="button" onclick="this.parentElement.remove(); mostrarResultado()">Remover</button>
+  `;
+  container.appendChild(div);
 }
-
 function calcularAreaAmbientes(){
 
 let areaTotal = 0
