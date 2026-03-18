@@ -187,33 +187,59 @@ async function protegerPaginaAdmin() {
 /* =================================================
    FUNÇÃO CENTRAL DE SELEÇÃO (RESOLVE O BALÃO)
 ================================================= */
-async function selecionarCliente(id, nome) {
+async function selecionarCliente(id, nome, whatsapp) {
+  // Identifica os elementos das diferentes telas (Novo Orçamento vs Consulta)
   const lista = document.getElementById("listaClientes");
+  const inputBusca = document.getElementById("cliente_nome") || document.getElementById("cliente_busca");
+  const inputWhats = document.getElementById("whatsapp");
   const orcamentosDiv = document.getElementById("orcamentos");
-  
-  lista.style.display = "none";
-  document.getElementById("cliente_busca").value = nome;
 
-  // 🔹 FILTRO: .eq("status", "PENDENTE") adicionado
-  const { data: orcamentos, error } = await supabaseClient
-    .from("orcamentos")
-    .select(`
-      *,
-      orcamento_ambientes (
-        *,
-        tipos_laje (nome)
-      )
-    `)
-    .eq("cliente_id", id)
-    .eq("status", "PENDENTE") // 👈 Apenas os pendentes aparecem aqui
-    .order("criado_em", { ascending: false });
-
-  if (error) {
-    console.error("Erro ao buscar orçamentos:", error);
-    return;
+  // 1. Limpa a lista de sugestões
+  if (lista) {
+    lista.style.display = "none";
+    lista.innerHTML = "";
   }
 
-  renderizarOrcamentos(orcamentos);
+  // 2. Preenche o Nome no campo de busca
+  if (inputBusca) {
+    inputBusca.value = nome;
+  }
+
+  // 3. ⚡ PREENCHIMENTO AUTOMÁTICO DO WHATSAPP
+  if (inputWhats && whatsapp) {
+    inputWhats.value = whatsapp;
+  }
+
+  // 4. Define o ID global para ser usado no salvarOrcamento()
+  clienteSelecionadoId = id; 
+  console.log("Cliente selecionado:", nome, "ID:", id);
+
+  // 5. Se estiver na tela de CONSULTA (onde existe a div 'orcamentos')
+  if (orcamentosDiv) {
+    orcamentosDiv.innerHTML = "<p>Buscando orçamentos...</p>";
+    
+    const { data: orcamentos, error } = await supabaseClient
+      .from("orcamentos")
+      .select(`
+        *,
+        orcamento_ambientes (
+          *,
+          tipos_laje (nome)
+        )
+      `)
+      .eq("cliente_id", id)
+      .eq("status", "PENDENTE") // Filtra apenas os que não foram arquivados/aprovados
+      .order("criado_em", { ascending: false });
+
+    if (error) {
+      console.error("Erro ao carregar orçamentos:", error);
+      orcamentosDiv.innerHTML = "Erro ao carregar.";
+      return;
+    }
+
+    // Chama a função que desenha os cards na tela
+    renderizarOrcamentos(orcamentos);
+  }
 }
 
 function renderizarOrcamentos(orcamentos) {
@@ -323,51 +349,58 @@ async function salvarCliente() {
 }
 
 // Busca usada na tela de "Novo Orçamento"
-async function buscarClientes(nome) {
-
+async function buscarClientes(termo) {
   const lista = document.getElementById("listaClientes");
   if (!lista) return;
 
-  if (!nome || nome.length < 2) {
+  // Só busca se tiver 2 ou mais caracteres
+  if (!termo || termo.length < 2) {
     lista.innerHTML = "";
     lista.style.display = "none";
     return;
   }
 
+  // 🔍 BUSCA DUPLA: Nome OU WhatsApp
   const { data, error } = await supabaseClient
     .from("clientes")
     .select("id, nome, whatsapp")
-    .or(`nome.ilike.%${nome}%,whatsapp.ilike.%${nome}%`)
+    .or(`nome.ilike.%${termo}%,whatsapp.ilike.%${termo}%`) 
     .order("nome")
     .limit(5);
 
   if (error) {
-    console.error(error);
+    console.error("Erro na busca:", error);
     return;
   }
 
   lista.innerHTML = "";
-  lista.style.display = "block";
-
-  data.forEach(c => {
-
-    const li = document.createElement("li");
-
-    li.innerHTML = `
-      <div style="padding:10px">
+  
+  if (data && data.length > 0) {
+    lista.style.display = "block";
+    data.forEach(c => {
+      const li = document.createElement("li");
+      li.style.cursor = "pointer";
+      li.style.padding = "10px";
+      li.style.borderBottom = "1px solid #eee";
+      
+      // Mostra Nome e WhatsApp na listinha de sugestão
+      li.innerHTML = `
         <strong>${c.nome}</strong><br>
-        <small>WhatsApp: ${c.whatsapp || "Não informado"}</small>
-      </div>
-    `;
+        <small style="color:#25D366">
+          <i data-lucide="phone" style="width:12px; height:12px; display:inline-block"></i> 
+          ${c.whatsapp || "Sem número"}
+        </small>
+      `;
 
-    li.style.cursor = "pointer";
-    li.style.borderBottom = "1px solid #eee";
-
-    li.onclick = () => selecionarCliente(c.id, c.nome);
-
-    lista.appendChild(li);
-
-  });
+      // Ao clicar, envia ID, Nome e o WhatsApp para preencher os campos
+      li.onclick = () => selecionarCliente(c.id, c.nome, c.whatsapp);
+      lista.appendChild(li);
+    });
+    
+    if (window.lucide) lucide.createIcons();
+  } else {
+    lista.style.display = "none";
+  }
 }
 // Busca usada na tela de "Consulta"
 async function buscarClientesConsulta(termo) {
