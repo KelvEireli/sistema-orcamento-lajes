@@ -1,6 +1,7 @@
 /* =================================================
    CONFIGURAÇÕES E ESTADO GLOBAL
 ================================================= */
+let orcamentosCarregados = [];
 let clienteSelecionadoId = null; // ID para novos orçamentos
 let clienteHistoricoAtual = null; // Controle para tela de histórico
 let nomeHistoricoAtual = null;
@@ -188,36 +189,30 @@ async function protegerPaginaAdmin() {
    FUNÇÃO CENTRAL DE SELEÇÃO (RESOLVE O BALÃO)
 ================================================= */
 async function selecionarCliente(id, nome, whatsapp) {
-  // Identifica os elementos das diferentes telas (Novo Orçamento vs Consulta)
+
   const lista = document.getElementById("listaClientes");
   const inputBusca = document.getElementById("cliente_nome") || document.getElementById("cliente_busca");
   const inputWhats = document.getElementById("whatsapp");
   const orcamentosDiv = document.getElementById("orcamentos");
 
-  // 1. Limpa a lista de sugestões
+  // Limpa lista
   if (lista) {
     lista.style.display = "none";
     lista.innerHTML = "";
   }
 
-  // 2. Preenche o Nome no campo de busca
-  if (inputBusca) {
-    inputBusca.value = nome;
-  }
+  // Preenche nome
+  if (inputBusca) inputBusca.value = nome;
 
-  // 3. ⚡ PREENCHIMENTO AUTOMÁTICO DO WHATSAPP
-  if (inputWhats && whatsapp) {
-    inputWhats.value = whatsapp;
-  }
+  // Preenche WhatsApp
+  if (inputWhats && whatsapp) inputWhats.value = whatsapp;
 
-  // 4. Define o ID global para ser usado no salvarOrcamento()
-  clienteSelecionadoId = id; 
-  console.log("Cliente selecionado:", nome, "ID:", id);
+  clienteSelecionadoId = id;
 
-  // 5. Se estiver na tela de CONSULTA (onde existe a div 'orcamentos')
+  // Se estiver na tela de consulta
   if (orcamentosDiv) {
     orcamentosDiv.innerHTML = "<p>Buscando orçamentos...</p>";
-    
+
     const { data: orcamentos, error } = await supabaseClient
       .from("orcamentos")
       .select(`
@@ -225,95 +220,113 @@ async function selecionarCliente(id, nome, whatsapp) {
         orcamento_ambientes (
           *,
           tipos_laje (nome)
+        ),
+        orcamento_itens (
+          *,
+          produtos_avulsos (nome)
         )
       `)
       .eq("cliente_id", id)
-      .eq("status", "PENDENTE") // Filtra apenas os que não foram arquivados/aprovados
-      .order("criado_em", { ascending: false });
+      .order("numero", { ascending: false });
 
     if (error) {
-      console.error("Erro ao carregar orçamentos:", error);
+      console.error(error);
       orcamentosDiv.innerHTML = "Erro ao carregar.";
       return;
     }
 
-    // Chama a função que desenha os cards na tela
+    orcamentosCarregados = orcamentos;
     renderizarOrcamentos(orcamentos);
   }
 }
 
 function renderizarOrcamentos(orcamentos) {
   const container = document.getElementById("orcamentos");
-  
+
   if (!orcamentos || orcamentos.length === 0) {
-    container.innerHTML = "<p>Nenhum orçamento encontrado para este cliente.</p>";
+    container.innerHTML = "<p>Nenhum orçamento encontrado.</p>";
     return;
   }
 
   container.innerHTML = orcamentos.map(orc => `
     <div class="card-orcamento" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #fff;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+      
+      <div style="display: flex; justify-content: space-between;">
         <div>
-          <h2 style="margin:0; color:var(--primary)">Orçamento #${orc.id.slice(0,5)}</h2>
-          <small>Data: ${new Date(orc.criado_em).toLocaleDateString('pt-BR')}</small>
+          <h2 style="margin:0; color:var(--primary)">
+            Orçamento ${orc.numero || '—'}
+          </h2>
+          <small>${new Date(orc.criado_em).toLocaleDateString('pt-BR')}</small>
         </div>
-        <span class="status-badge status-${orc.status.toLowerCase()}" 
-              style="padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; background: #e0e0e0;">
+
+        <span style="padding:5px 10px; border-radius:5px; font-weight:bold;">
           ${orc.status}
         </span>
       </div>
 
-      <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+      <hr>
 
-      <h3 style="font-size: 1em; margin-bottom: 10px;"><i data-lucide="layers"></i> Ambientes e Vigas</h3>
-      <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-        <thead>
-          <tr style="text-align: left; border-bottom: 2px solid #eee;">
-            <th style="padding: 5px;">Local</th>
-            <th>Laje</th>
-            <th>Medidas</th>
-            <th>Vigas</th>
-            <th style="text-align: right;">Subtotal</th>
+      <!-- AMBIENTES -->
+      <h3><i data-lucide="layers"></i> Ambientes</h3>
+
+      <table style="width:100%; font-size:0.9em;">
+        ${orc.orcamento_ambientes.map(amb => `
+          <tr>
+            <td>${amb.nome}</td>
+            <td>${amb.tipos_laje?.nome || ''}</td>
+            <td>${amb.largura}x${amb.comprimento}</td>
+            <td>${amb.qtd_vigas || 0} vigas</td>
+            <td style="text-align:right">
+              R$ ${amb.subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          ${orc.orcamento_ambientes.map(amb => `
-            <tr style="border-bottom: 1px solid #f9f9f9;">
-              <td style="padding: 8px 5px;">${amb.nome}</td>
-              <td>${amb.tipos_laje?.nome || 'N/A'}</td>
-              <td>${amb.largura}x${amb.comprimento}m</td>
-              <td style="font-weight: bold; color: #d32f2f;">${amb.qtd_vigas || 0} un</td>
-              <td style="text-align: right;">R$ ${amb.subtotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-            </tr>
-          `).join('')}
-        </tbody>
+        `).join('')}
       </table>
 
-      <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-          <span>Metragem Total:</span>
-          <strong>${orc.metragem_calculada.toFixed(2)} m²</strong>
+      <!-- PRODUTOS AVULSOS -->
+      ${orc.orcamento_itens && orc.orcamento_itens.length > 0 ? `
+        <div style="margin-top:15px;">
+          <h3><i data-lucide="package"></i> Produtos Avulsos</h3>
+
+          <table style="width:100%; font-size:0.9em;">
+            ${orc.orcamento_itens.map(item => `
+              <tr>
+                <td>
+                  ${item.quantidade}x ${item.produtos_avulsos?.nome || 'Produto'}
+                </td>
+                <td style="text-align:right">
+                  R$ ${(item.quantidade * item.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2})}
+                </td>
+              </tr>
+            `).join('')}
+          </table>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+      ` : ''}
+
+      <!-- TOTAL -->
+      <div style="margin-top:15px; padding:10px; background:#f8f9fa;">
+        <div style="display:flex; justify-content:space-between;">
           <span>Frete:</span>
-          <strong>R$ ${orc.frete.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+          <strong>R$ ${orc.frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>
         </div>
-        <div style="display: flex; justify-content: space-between; color: var(--primary); font-size: 1.1em;">
-          <span><strong>Total Final (${orc.forma_pagamento}):</strong></span>
-          <strong>R$ ${orc.total_final.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+
+        <div style="display:flex; justify-content:space-between; font-size:1.1em; color:var(--primary);">
+          <strong>Total:</strong>
+          <strong>R$ ${orc.total_final.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>
         </div>
       </div>
-      
+
       ${orc.endereco_entrega ? `
-        <p style="font-size: 0.85em; margin-top: 10px; color: #666;">
-          <i data-lucide="map-pin" style="width:14px"></i> Entrega: ${orc.endereco_entrega}
+        <p style="margin-top:10px; font-size:0.85em;">
+          📍 ${orc.endereco_entrega}
         </p>
       ` : ''}
+
     </div>
   `).join('');
 
-  // Reinicializa os ícones da Lucide nos novos cards
-  lucide.createIcons();
+  // Recarrega ícones
+  if (window.lucide) lucide.createIcons();
 }
 /* =================================================
    GESTÃO DE CLIENTES
@@ -1110,27 +1123,28 @@ function adicionarAmbiente() {
 
   const div = document.createElement("div");
   div.className = "ambiente card"; // Ajuste conforme seu CSS
-  div.innerHTML = `
-    <input type="text" class="amb-nome" placeholder="Nome do Ambiente (ex: Sala)">
+div.innerHTML = `
+  <div class="linha-ambiente">
     
-    <label>Largura (m)</label>
-    <input type="number" class="amb-largura" oninput="mostrarResultado()">
-    
-    <label>Comprimento (m)</label>
-    <input type="number" class="amb-comprimento" oninput="mostrarResultado()">
+    <input type="text" class="amb-nome" placeholder="Ambiente">
 
-    <label>Tipo de Laje</label>
+    <input type="number" class="amb-largura" placeholder="Largura (m)" oninput="mostrarResultado()">
+    
+    <input type="number" class="amb-comprimento" placeholder="Comprimento (m)" oninput="mostrarResultado()">
+
     <select class="amb-laje" onchange="mostrarResultado()">
-      <option value="">Selecione...</option>
+      <option value="">Laje</option>
       ${lajesGlobais.map(l => `<option value="${l.id}">${l.nome}</option>`).join('')}
     </select>
 
-    <div class="info-vigas" style="margin-top:10px; font-weight:bold; color: var(--primary)">
-      Vigas necessárias: <span class="amb-qtd-vigas">0</span>
-    </div>
-    
-    <button type="button" onclick="this.parentElement.remove(); mostrarResultado()">Remover</button>
-  `;
+    <button type="button" class="btn-remover" onclick="this.closest('.ambiente').remove(); mostrarResultado()">✕</button>
+
+  </div>
+
+  <div class="info-vigas">
+    Vigas necessárias: <span class="amb-qtd-vigas">0</span>
+  </div>
+`;
   container.appendChild(div);
 }
 function calcularAreaAmbientes(){
@@ -1201,4 +1215,18 @@ custoTotal += area * laje.custo_m2
 console.log("Venda:", total)
 console.log("Custo:", custoTotal)
 
+}
+
+function filtrarOrcamentos() {
+  const statusSelecionado = document.getElementById("filtroStatus").value;
+
+  if (!orcamentosCarregados || orcamentosCarregados.length === 0) return;
+
+  let filtrados = orcamentosCarregados;
+
+  if (statusSelecionado) {
+    filtrados = orcamentosCarregados.filter(o => o.status === statusSelecionado);
+  }
+
+  renderizarOrcamentos(filtrados);
 }
