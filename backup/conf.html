@@ -1,0 +1,90 @@
+    <!DOCTYPE html>
+<html lang="pt-BR">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>  
+<head>
+  <meta charset="UTF-8">
+  <title>Painel Administrativo</title>
+
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js" defer></script>
+
+  
+
+</head>
+
+<body>
+
+<div class="app-container">
+  <div class="screen">
+
+    <main class="screen-content">
+      <h1>Área Administrativa</h1>
+
+      <div class="card">
+        <p>Configurações avançadas do sistema.</p>
+      </div>
+
+      
+    </main>
+<header class="screen-header">
+
+<a href="conf.html">
+<i data-lucide="settings"></i>
+Configurações
+</a>
+
+<a href="cliente.html">
+<i data-lucide="user-plus"></i>
+Novo Cliente
+</a>
+
+<a href="orcamento.html">
+<i data-lucide="file-plus"></i>
+Novo Orçamento
+</a>
+
+<a href="consulta.html">
+<i data-lucide="search"></i>
+Consultar
+</a>
+
+<a href="historico.html">
+<i data-lucide="archive"></i>
+Histórico
+</a>
+
+<a href="#" onclick="logout()">
+<i data-lucide="log-out"></i>
+Sair
+</a>
+
+</header>
+    <h2>Tipos de Laje</h2>
+<div id="listaLajes"></div>
+<button onclick="abrirNovaLaje()">Nova Laje</button>
+
+<h2>Produtos Avulsos</h2>
+<div id="listaProdutos"></div>
+<div id="formEdicaoProduto"></div> 
+<button onclick="abrirNovoProduto()">Novo Produto</button>
+
+  </div>
+</div>
+
+<script>
+    
+document.addEventListener("DOMContentLoaded", () => {
+  protegerPaginaAdmin();
+  carregarLajesAdmin();
+  carregarProdutosAdmin();
+});
+</script>
+
+</body>
+<script>
+window.addEventListener("load", () => {
+  lucide.createIcons();
+});
+</script>
+</html>

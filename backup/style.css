@@ -1,0 +1,184 @@
+/* =================================================
+   BASE
+================================================= */
+:root {
+  --bg-main: #f1f5f9;
+  --primary: #4f46e5;
+  --primary-glow: rgba(79, 70, 229, 0.15);
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-subtle: #e2e8f0;
+
+  --radius-inner: 12px;
+  --radius-outer: 24px;
+
+  --shadow-premium: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+                    0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-main);
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* =================================================
+   CONTAINER
+================================================= */
+.screen {
+  width: 100%;
+  max-width: 900px;
+  background: rgba(255,255,255,0.9);
+  border-radius: var(--radius-outer);
+  box-shadow: var(--shadow-premium);
+  padding: 40px;
+}
+
+/* =================================================
+   HEADER
+================================================= */
+.screen-header {
+  display: flex;
+  gap: 28px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+}
+
+.screen-header a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.screen-header a:hover {
+  color: var(--primary);
+}
+
+/* 🔥 ÍCONES MAIORES */
+.screen-header svg {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2.2;
+}
+
+/* =================================================
+   INPUTS
+================================================= */
+input, select {
+  width: 100%;
+  padding: 12px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-inner);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* =================================================
+   BOTÃO PRINCIPAL
+================================================= */
+button {
+  border: none;
+  border-radius: var(--radius-inner);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:not(.btn-remover) {
+  width: 100%;
+  margin-top: 15px;
+  padding: 14px;
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  color: white;
+}
+
+button:not(.btn-remover):hover {
+  background: linear-gradient(135deg, #4338ca, #3730a3);
+}
+
+/* =================================================
+   AMBIENTES
+================================================= */
+.ambiente {
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-inner);
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+.linha-ambiente {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inputs-ambiente {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.amb-nome {
+  flex: 2;
+}
+
+.amb-largura,
+.amb-comprimento {
+  flex: 0 0 80px;
+}
+
+.amb-laje {
+  flex: 1;
+}
+
+/* botão remover lateral */
+.btn-remover {
+  width: 36px;
+  height: 36px;
+  background: #ef4444;
+  color: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-remover:hover {
+  background: #dc2626;
+}
+
+/* info */
+.info-vigas {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--primary);
+}
+
+/* =================================================
+   RESPONSIVO
+================================================= */
+@media (max-width: 768px) {
+  .inputs-ambiente {
+    flex-wrap: wrap;
+  }
+}

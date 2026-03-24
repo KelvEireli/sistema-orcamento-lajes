@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Novo Orçamento</title>
+
+<link rel="stylesheet" href="style.css">
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- LUCIDE ICONS -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- APP -->
+<script src="app.js" defer></script>
+
+</head>
+
+<body>
+
+<div class="app-container">
+<div class="screen">
+
+<!-- HEADER -->
+<header class="screen-header">
+
+<a href="conf.html">
+<i data-lucide="settings"></i>
+Configurações
+</a>
+
+<a href="cliente.html">
+<i data-lucide="user-plus"></i>
+Novo Cliente
+</a>
+
+<a href="orcamento.html">
+<i data-lucide="file-plus"></i>
+Novo Orçamento
+</a>
+
+<a href="consulta.html">
+<i data-lucide="search"></i>
+Consultar
+</a>
+
+<a href="historico.html">
+<i data-lucide="archive"></i>
+Histórico
+</a>
+
+<a href="#" onclick="logout()">
+<i data-lucide="log-out"></i>
+Sair
+</a>
+
+</header>
+
+
+<!-- CONTEÚDO -->
+<main class="screen-content">
+
+<h1>
+<i data-lucide="file-text"></i>
+Novo Orçamento
+</h1>
+
+<div class="card">
+
+<!-- CLIENTE -->
+<label>Cliente</label>
+
+<input
+id="cliente_nome"
+placeholder="Digite para buscar o cliente"
+oninput="buscarClientes(this.value)"
+>
+
+<ul id="listaClientes"></ul>
+
+
+<!-- WHATSAPP -->
+<label>WhatsApp</label>
+<input id="whatsapp" placeholder="Ex: 32999999999">
+
+
+<!-- AMBIENTE -->
+<h3>Medidas</h3>
+
+<div id="listaAmbientes"></div>
+
+<button type="button" onclick="adicionarAmbiente()">
++ Nova Medida
+</button>
+<!-- ENDEREÇO -->
+<label>Endereço de Entrega</label>
+<input id="endereco_entrega" placeholder="Rua, número, bairro">
+
+
+
+
+<!-- PRODUTOS -->
+<h3>
+<i data-lucide="package"></i>
+Produtos Avulsos
+</h3>
+
+<div id="listaProdutosAvulsos" class="card-grid"></div>
+
+
+
+
+
+<!-- FRETE -->
+<label>Frete (R$)</label>
+<input
+type="number"
+id="frete"
+value="0"
+oninput="mostrarResultado()"
+>
+
+
+<!-- PAGAMENTO -->
+<label>Forma de Pagamento</label>
+
+<select id="pagamento" onchange="mostrarResultado()">
+<option value="1">À vista</option>
+<option value="1.1">Parcelado</option>
+</select>
+
+
+<!-- PRAZO -->
+<label>Data mínima de entrega</label>
+<input type="date" id="data">
+
+
+<!-- RESULTADO -->
+<div id="resultado" class="resultado"></div>
+
+
+<!-- BOTÃO -->
+<button onclick="salvarOrcamento()">
+
+<i data-lucide="save"></i>
+Salvar Orçamento
+
+</button>
+
+</div>
+
+</main>
+</div>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+
+  lucide.createIcons()
+
+  if (typeof protegerPaginaAdmin === "function")
+    await protegerPaginaAdmin()
+
+  if (typeof carregarLajes === "function")
+    await carregarLajes()
+
+  if (typeof carregarProdutosOrcamento === "function")
+    await carregarProdutosOrcamento()
+
+  // agora sim
+  adicionarAmbiente()
+
+})
+
+
+</script>
+
+</body>
+</html>
