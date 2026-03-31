@@ -1184,20 +1184,167 @@ async function carregarLajes() {
 }
 
 // Esta função deve ser a ÚLTIMA do arquivo. Remova qualquer "}" que sobrar abaixo dela.
-async function imprimirOrcamentoPorId(id) {
-  const { data: orc, error } = await supabaseClient
-    .from("orcamentos")
-    .select(`
-      *,
-      clientes (nome, whatsapp, endereco),
-      orcamento_ambientes (*, tipos_laje (nome)),
-      orcamento_itens (*, produtos_avulsos (nome))
-    `)
-    .eq("id", id)
-    .single();
+function imprimirOrcamento(orc) {
+    const janelaImpressao = window.open('', '_blank');
+    
+    const clienteNome = orc.clientes?.nome || "Não informado";
+    const clienteWhats = orc.clientes?.whatsapp || "Não informado";
+    const clienteEnd = orc.endereco_entrega || orc.clientes?.endereco || "Retirada na loja";
 
-  if (error || !orc) return alert("Erro ao carregar orçamento");
-  imprimirOrcamento(orc);
+    // 🔥 VIA COMPLETA (CLIENTE)
+    const viaCompleta = `
+        ${header()}
+        ${clienteInfo()}
+
+        <table class="tabela-print">
+            <thead>
+                <tr>
+                    <th>Item / Ambiente</th>
+                    <th style="text-align:center;">Qtd/Medida</th>
+                    <th style="text-align:right;">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${orc.orcamento_ambientes.map(amb => `
+                    <tr>
+                        <td><strong>${amb.nome}</strong><br><small>${amb.tipos_laje?.nome || 'Laje'}</small></td>
+                        <td style="text-align:center;">${amb.largura}x${amb.comprimento}m<br><small>${amb.qtd_vigas || 0} vigas</small></td>
+                        <td style="text-align:right;">R$ ${amb.subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                    </tr>
+                `).join('')}
+
+                ${(orc.orcamento_itens || []).map(item => `
+                    <tr>
+                        <td>${item.produtos_avulsos?.nome || 'Produto'}</td>
+                        <td style="text-align:center;">${item.quantidade} un</td>
+                        <td style="text-align:right;">R$ ${(item.quantidade * item.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+
+        ${resumo(true)}
+        ${assinatura()}
+    `;
+
+    
+    const viaProducao = `
+        ${header()}
+        ${clienteInfo()}
+
+        <table class="tabela-print">
+            <thead>
+                <tr>
+                    <th>Item / Ambiente</th>
+                    <th style="text-align:center;">Qtd/Medida</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${orc.orcamento_ambientes.map(amb => `
+                    <tr>
+                        <td><strong>${amb.nome}</strong><br><small>${amb.tipos_laje?.nome || 'Laje'}</small></td>
+                        <td style="text-align:center;">${amb.largura}x${amb.comprimento}m<br><small>${amb.qtd_vigas || 0} vigas</small></td>
+                    </tr>
+                `).join('')}
+
+                ${(orc.orcamento_itens || []).map(item => `
+                    <tr>
+                        <td>${item.produtos_avulsos?.nome || 'Produto'}</td>
+                        <td style="text-align:center;">${item.quantidade} un</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+
+        ${resumo(false)}
+        ${assinatura()}
+    `;
+
+    // 🔧 COMPONENTES REUTILIZÁVEIS (pra você parar de repetir código igual iniciante)
+    function header() {
+        return `
+            <div class="header-print">
+                <img src="https://dtznxqqcyrzlaijjbwzr.supabase.co/storage/v1/object/public/logos/Gemini_Generated_Image_guq5kaguq5kaguq5.png" style="height:60px;">
+                <div style="text-align:right">
+                    <h2 style="margin:0;">ORÇAMENTO #${orc.numero || orc.id.slice(0,5)}</h2>
+                    <p style="margin:2px 0;">${new Date(orc.criado_em).toLocaleDateString('pt-BR')}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function clienteInfo() {
+        return `
+            <div class="cliente-info">
+                <strong>CLIENTE:</strong> ${clienteNome}<br>
+                <strong>CONTATO:</strong> ${clienteWhats}<br>
+                <strong>ENDEREÇO:</strong> ${clienteEnd}
+            </div>
+        `;
+    }
+
+    function resumo(comValores) {
+        if (!comValores) {
+            return `<p style="margin-top:10px; font-size:11px;">Pagamento: ${orc.forma_pagamento || 'A combinar'}</p>`;
+        }
+
+        return `
+            <div class="resumo-print">
+                <div class="linha-resumo">
+                    <span>Subtotal:</span>
+                    <span>R$ ${orc.subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                </div>
+                <div class="linha-resumo">
+                    <span>Frete:</span>
+                    <span>R$ ${orc.frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                </div>
+                <div class="linha-resumo total">
+                    <span>TOTAL:</span>
+                    <span>R$ ${orc.total_final.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function assinatura() {
+        return `
+            <div style="margin-top:30px; display:flex; justify-content:space-between; font-size:10px;">
+                <div style="border-top:1px solid #000; width:45%; text-align:center;">Lajes Brasil</div>
+                <div style="border-top:1px solid #000; width:45%; text-align:center;">${clienteNome}</div>
+            </div>
+        `;
+    }
+
+    janelaImpressao.document.write(`
+        <html>
+        <head>
+            <style>
+                @page { size: A4; margin: 0; }
+                body { font-family: sans-serif; margin: 0; }
+                .folha { height: 297mm; display: flex; flex-direction: column; }
+                .metade { height: 50%; padding: 12mm; border-bottom: 1px dashed #000; }
+                .header-print { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+                .cliente-info { font-size:12px; margin-bottom:10px; }
+                .tabela-print { width:100%; border-collapse:collapse; font-size:11px; }
+                .tabela-print td, .tabela-print th { border:1px solid #eee; padding:5px; }
+                .resumo-print { margin-top:10px; text-align:right; }
+                .linha-resumo { display:flex; justify-content:space-between; }
+                .total { font-weight:bold; }
+            </style>
+        </head>
+        <body>
+            <div class="folha">
+                <div class="metade">${viaCompleta}</div>
+                <div class="metade">${viaProducao}</div>
+            </div>
+            <script>
+                window.onload = () => setTimeout(() => { window.print(); window.close(); }, 500);
+            </script>
+        </body>
+        </html>
+    `);
+
+    janelaImpressao.document.close();
 }
 
 async function atualizarObservacao(id, texto) {
