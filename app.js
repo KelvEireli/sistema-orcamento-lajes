@@ -188,58 +188,28 @@ async function protegerPaginaAdmin() {
 /* =================================================
    FUNÇÃO CENTRAL DE SELEÇÃO (RESOLVE O BALÃO)
 ================================================= */
-async function selecionarCliente(id, nome, whatsapp) {
-
-  const lista = document.getElementById("listaClientes");
-  const inputBusca = document.getElementById("cliente_nome") || document.getElementById("cliente_busca");
+// Como estava no seu app.js
+function selecionarCliente(id, nome, whatsapp, endereco) {
+  const inputNome = document.getElementById("cliente_nome");
   const inputWhats = document.getElementById("whatsapp");
-  const orcamentosDiv = document.getElementById("orcamentos");
+  const inputEndereco = document.getElementById("endereco_entrega");
+  const lista = document.getElementById("listaClientes");
 
-  // Limpa lista
+  // Preenche os campos do formulário de orçamento
+  if (inputNome) inputNome.value = nome;
+  if (inputWhats) inputWhats.value = whatsapp || "";
+  if (inputEndereco) inputEndereco.value = endereco || "";
+
+  // Salva o ID do cliente globalmente para o salvarOrcamento()
+  clienteSelecionadoId = id;
+
+  // Esconde a lista de sugestões
   if (lista) {
     lista.style.display = "none";
     lista.innerHTML = "";
   }
-
-  // Preenche nome
-  if (inputBusca) inputBusca.value = nome;
-
-  // Preenche WhatsApp
-  if (inputWhats && whatsapp) inputWhats.value = whatsapp;
-
-  clienteSelecionadoId = id;
-
-  // Se estiver na tela de consulta
-  if (orcamentosDiv) {
-    orcamentosDiv.innerHTML = "<p>Buscando orçamentos...</p>";
-
-    const { data: orcamentos, error } = await supabaseClient
-      .from("orcamentos")
-      .select(`
-        *,
-        orcamento_ambientes (
-          *,
-          tipos_laje (nome)
-        ),
-        orcamento_itens (
-          *,
-          produtos_avulsos (nome)
-        )
-      `)
-      .eq("cliente_id", id)
-      .order("numero", { ascending: false });
-
-    if (error) {
-      console.error(error);
-      orcamentosDiv.innerHTML = "Erro ao carregar.";
-      return;
-    }
-
-    orcamentosCarregados = orcamentos;
-    renderizarOrcamentos(orcamentos);
-  }
 }
-
+// --- RENDERIZAÇÃO NA TELA (CONSULTA) ---
 function renderizarOrcamentos(orcamentos) {
   const container = document.getElementById("orcamentos");
 
@@ -249,90 +219,170 @@ function renderizarOrcamentos(orcamentos) {
   }
 
   container.innerHTML = orcamentos.map(orc => `
-    <div class="card-orcamento" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #fff;">
-      
-      <div style="display: flex; justify-content: space-between;">
+    <div class="card-orcamento" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
         <div>
-          <h2 style="margin:0; color:var(--primary)">
-            Orçamento ${orc.numero || '—'}
-          </h2>
+          <h2 style="margin:0; color:#2c3e50;">Orçamento ${orc.numero || '—'}</h2>
           <small>${new Date(orc.criado_em).toLocaleDateString('pt-BR')}</small>
         </div>
-
-        <span style="padding:5px 10px; border-radius:5px; font-weight:bold;">
-          ${orc.status}
-        </span>
+        <button onclick="imprimirOrcamentoPorId('${orc.id}')">
+          🖨️ Imprimir 2 Vias
+        </button>
       </div>
+      
+      <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
 
-      <hr>
-
-      <!-- AMBIENTES -->
-      <h3><i data-lucide="layers"></i> Ambientes</h3>
-
-      <table style="width:100%; font-size:0.9em;">
+      <table style="width:100%; font-size:0.9em; border-collapse: collapse; margin-bottom: 10px;">
         ${orc.orcamento_ambientes.map(amb => `
           <tr>
-            <td>${amb.nome}</td>
-            <td>${amb.tipos_laje?.nome || ''}</td>
-            <td>${amb.largura}x${amb.comprimento}</td>
-            <td>${amb.qtd_vigas || 0} vigas</td>
-            <td style="text-align:right">
-              R$ ${amb.subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}
-            </td>
+            <td style="padding:5px 0;"><strong>${amb.nome}</strong> (${amb.tipos_laje?.nome || 'Laje'})</td>
+            <td style="text-align:center;">${amb.largura}x${amb.comprimento}</td>
+            <td style="text-align:right;">R$ ${amb.subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
           </tr>
         `).join('')}
       </table>
 
-      <!-- PRODUTOS AVULSOS -->
       ${orc.orcamento_itens && orc.orcamento_itens.length > 0 ? `
-        <div style="margin-top:15px;">
-          <h3><i data-lucide="package"></i> Produtos Avulsos</h3>
-
-          <table style="width:100%; font-size:0.9em;">
+        <div style="border-top: 1px dashed #eee; pt: 10px; margin-top: 10px;">
+          <small style="color: #666; text-transform: uppercase;">Produtos Avulsos</small>
+          <table style="width:100%; font-size:0.9em; border-collapse: collapse;">
             ${orc.orcamento_itens.map(item => `
               <tr>
-                <td>
-                  ${item.quantidade}x ${item.produtos_avulsos?.nome || 'Produto'}
-                </td>
-                <td style="text-align:right">
-                  R$ ${(item.quantidade * item.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2})}
-                </td>
+                <td style="padding:5px 0;">${item.quantidade}x ${item.produtos_avulsos?.nome || 'Produto'}</td>
+                <td style="text-align:right;">R$ ${(item.quantidade * item.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
               </tr>
             `).join('')}
           </table>
         </div>
       ` : ''}
 
-      <!-- TOTAL -->
-      <div style="margin-top:15px; padding:10px; background:#f8f9fa;">
-        <div style="display:flex; justify-content:space-between;">
-          <span>Frete:</span>
-          <strong>R$ ${orc.frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>
+      <div style="margin-top:15px; padding:12px; background:#f8f9fa; border-radius:5px;">
+        <div style="display:flex; justify-content:space-between; font-size: 0.9em; margin-bottom: 5px;">
+            <span>Frete:</span>
+            <span>R$ ${orc.frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
         </div>
-
-        <div style="display:flex; justify-content:space-between; font-size:1.1em; color:var(--primary);">
-          <strong>Total:</strong>
-          <strong>R$ ${orc.total_final.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>
+        <div style="display:flex; justify-content:space-between; font-weight:bold; color:#d32f2f; font-size:1.1em;">
+          <span>Total Final:</span>
+          <span>R$ ${orc.total_final.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
         </div>
       </div>
-
-      ${orc.endereco_entrega ? `
-        <p style="margin-top:10px; font-size:0.85em;">
-          📍 ${orc.endereco_entrega}
-        </p>
-      ` : ''}
-
     </div>
   `).join('');
+}
 
-  // Recarrega ícones
-  if (window.lucide) lucide.createIcons();
+// --- FUNÇÃO DE IMPRESSÃO (A4 DIVIDIDO) ---
+
+// --- FUNÇÃO DE IMPRESSÃO (DIVIDE A FOLHA A4) ---
+function imprimirOrcamento(orc) {
+    const janelaImpressao = window.open('', '_blank');
+    
+    // Dados do cliente vindos do relacionamento ou do cabeçalho do orçamento
+    const clienteNome = orc.clientes?.nome || "Não informado";
+    const clienteWhats = orc.clientes?.whatsapp || "Não informado";
+    const clienteEnd = orc.endereco_entrega || orc.clientes?.endereco || "Retirada na loja";
+
+    const conteudoVia = `
+        <div class="header-print">
+            <img src="https://dtznxqqcyrzlaijjbwzr.supabase.co/storage/v1/object/public/logos/Gemini_Generated_Image_guq5kaguq5kaguq5.png" style="height:60px;">
+            <div style="text-align:right">
+                <h2 style="margin:0; color:#333;">ORÇAMENTO #${orc.numero || orc.id.slice(0,5)}</h2>
+                <p style="margin:2px 0;">Data: ${new Date(orc.criado_em).toLocaleDateString('pt-BR')}</p>
+            </div>
+        </div>
+
+        <div class="cliente-info" style="margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-radius: 5px; font-size: 12px;">
+            <strong>CLIENTE:</strong> ${clienteNome} <br>
+            <strong>CONTATO:</strong> ${clienteWhats} <br>
+            <strong>ENDEREÇO:</strong> ${clienteEnd}
+        </div>
+
+        <table class="tabela-print">
+            <thead>
+                <tr>
+                    <th>Item / Ambiente</th>
+                    <th style="text-align:center;">Qtd/Medida</th>
+                    <th style="text-align:right;">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${orc.orcamento_ambientes.map(amb => `
+                    <tr>
+                        <td><strong>${amb.nome}</strong><br><small>${amb.tipos_laje?.nome || 'Laje'}</small></td>
+                        <td style="text-align:center;">${amb.largura}x${amb.comprimento}m<br><small>${amb.qtd_vigas || 0} vigas</small></td>
+                        <td style="text-align:right;">R$ ${amb.subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                    </tr>
+                `).join('')}
+                
+                ${orc.orcamento_itens.map(item => `
+                    <tr>
+                        <td>${item.produtos_avulsos?.nome || 'Produto'}</td>
+                        <td style="text-align:center;">${item.quantidade} un</td>
+                        <td style="text-align:right;">R$ ${(item.quantidade * item.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+
+        <div class="resumo-print">
+            <div class="linha-resumo">
+                <span>Subtotal:</span>
+                <span>R$ ${orc.subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+            </div>
+            <div class="linha-resumo">
+                <span>Frete:</span>
+                <span>R$ ${orc.frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+            </div>
+            <div class="linha-resumo total">
+                <span>TOTAL:</span>
+                <span>R$ ${orc.total_final.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+            </div>
+            <p style="font-size:11px; margin-top:5px;">Pagamento: <strong>${orc.forma_pagamento || 'A combinar'}</strong></p>
+        </div>
+
+        <div style="margin-top:30px; display:flex; justify-content:space-between; font-size:10px;">
+            <div style="border-top:1px solid #000; width:45%; text-align:center; padding-top:5px;">Lajes Brasil</div>
+            <div style="border-top:1px solid #000; width:45%; text-align:center; padding-top:5px;"> ${clienteNome}</div>
+        </div>
+    `;
+
+    janelaImpressao.document.write(`
+        <html>
+        <head>
+            <title>Impressão Orçamento</title>
+            <style>
+                @page { size: A4; margin: 0; }
+                body { font-family: sans-serif; margin: 0; padding: 0; }
+                .folha { width: 210mm; height: 297mm; display: flex; flex-direction: column; }
+                .metade { height: 50%; padding: 12mm; box-sizing: border-box; border-bottom: 1px dashed #000; position: relative; overflow: hidden; }
+                .metade:last-child { border-bottom: none; }
+                .header-print { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 5px; }
+                .tabela-print { width: 100%; border-collapse: collapse; font-size: 11px; }
+                .tabela-print th, .tabela-print td { border: 1px solid #eee; padding: 6px; text-align: left; }
+                .tabela-print th { background: #f2f2f2; }
+                .resumo-print { margin-top: 10px; display: flex; flex-direction: column; align-items: flex-end; }
+                .linha-resumo { width: 180px; display: flex; justify-content: space-between; font-size: 12px; }
+                .total { font-weight: bold; font-size: 15px; border-top: 1px solid #333; margin-top: 5px; padding-top: 5px; }
+            </style>
+        </head>
+        <body>
+            <div class="folha">
+                <div class="metade">${conteudoVia}</div>
+                <div class="metade">${conteudoVia}</div>
+            </div>
+            <script>
+                window.onload = () => { 
+                    setTimeout(() => { window.print(); window.close(); }, 500); 
+                };
+            </script>
+        </body>
+        </html>
+    `);
+    janelaImpressao.document.close();
 }
 /* =================================================
    GESTÃO DE CLIENTES
 ================================================= */
 async function salvarCliente() {
-
   const nome = document.getElementById("nome").value;
   const email = document.getElementById("email").value;
   const whatsapp = document.getElementById("whatsapp").value;
@@ -345,12 +395,7 @@ async function salvarCliente() {
 
   const { error } = await supabaseClient
     .from("clientes")
-    .insert({
-      nome,
-      email,
-      whatsapp,
-      endereco
-    });
+    .insert({ nome, email, whatsapp, endereco });
 
   if (error) {
     alert(error.message);
@@ -366,58 +411,51 @@ async function buscarClientes(termo) {
   const lista = document.getElementById("listaClientes");
   if (!lista) return;
 
-  // Só busca se tiver 2 ou mais caracteres
   if (!termo || termo.length < 2) {
     lista.innerHTML = "";
     lista.style.display = "none";
     return;
   }
 
-  // 🔍 BUSCA DUPLA: Nome OU WhatsApp
-  const { data, error } = await supabaseClient
-    .from("clientes")
-    .select("id, nome, whatsapp")
-    .or(`nome.ilike.%${termo}%,whatsapp.ilike.%${termo}%`) 
-    .order("nome")
-    .limit(5);
+  const apenasNumeros = termo.replace(/\D/g, "");
+  let query = supabaseClient.from("clientes").select("id, nome, whatsapp, endereco");
 
-  if (error) {
-    console.error("Erro na busca:", error);
-    return;
+  if (apenasNumeros.length >= 2) {
+    query = query.or(`nome.ilike.%${termo}%,whatsapp.ilike.%${apenasNumeros}%`);
+  } else {
+    query = query.or(`nome.ilike.%${termo}%,whatsapp.ilike.%${termo}%`);
   }
 
+  const { data, error } = await query.order("nome").limit(5);
+
+  if (error) return;
+
   lista.innerHTML = "";
-  
   if (data && data.length > 0) {
     lista.style.display = "block";
     data.forEach(c => {
       const li = document.createElement("li");
-      li.style.cursor = "pointer";
-      li.style.padding = "10px";
-      li.style.borderBottom = "1px solid #eee";
-      
-      // Mostra Nome e WhatsApp na listinha de sugestão
+      li.style = "cursor:pointer; padding:10px; border-bottom:1px solid #eee; background:#fff;";
       li.innerHTML = `
-        <strong>${c.nome}</strong><br>
-        <small style="color:#25D366">
-          <i data-lucide="phone" style="width:12px; height:12px; display:inline-block"></i> 
-          ${c.whatsapp || "Sem número"}
-        </small>
-      `;
-
-      // Ao clicar, envia ID, Nome e o WhatsApp para preencher os campos
-      li.onclick = () => selecionarCliente(c.id, c.nome, c.whatsapp);
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong style="display:block; color:#333;">${c.nome}</strong>
+            <small style="color:#25D366; font-weight:bold;">${c.whatsapp || "Sem número"}</small>
+          </div>
+        </div>`;
+      li.onclick = () => selecionarCliente(c.id, c.nome, c.whatsapp, c.endereco);
       lista.appendChild(li);
     });
-    
     if (window.lucide) lucide.createIcons();
   } else {
     lista.style.display = "none";
   }
 }
-// Busca usada na tela de "Consulta"
-async function buscarClientesConsulta(termo) {
 
+
+
+//Busca usada na tela de "Consulta"
+async function buscarClientesConsulta(termo) {
   const lista = document.getElementById("listaClientes");
   if (!lista) return;
 
@@ -443,24 +481,22 @@ async function buscarClientesConsulta(termo) {
   lista.style.display = "block";
 
   data.forEach(c => {
-
     const li = document.createElement("li");
-
+    li.style = "cursor:pointer; border-bottom:1px solid #eee; background:#fff;";
     li.innerHTML = `
-      <div style="padding:10px">
-        <strong>${c.nome}</strong><br>
-        <small>WhatsApp: ${c.whatsapp || "Não informado"}</small><br>
-        <small>Endereço: ${c.endereco || "Não informado"}</small>
-      </div>
-    `;
-
-    li.style.cursor = "pointer";
-    li.style.borderBottom = "1px solid #eee";
-
-    li.onclick = () => selecionarCliente(c.id, c.nome);
-
+      <div style="padding:12px">
+        <strong style="color:var(--primary);">${c.nome}</strong><br>
+        <small style="color:#666;">${c.whatsapp || "Sem WhatsApp"}</small>
+      </div>`;
+    
+    li.onclick = () => {
+      clienteSelecionadoId = c.id; 
+      nomeHistoricoAtual = c.nome;
+      document.getElementById("cliente_busca").value = c.nome;
+      lista.style.display = "none";
+      carregarOrcamentos(c.id, c.nome); 
+    };
     lista.appendChild(li);
-
   });
 }
 /* =================================================
@@ -783,13 +819,19 @@ async function carregarOrcamentos(clienteId, nomeCliente) {
   const dataFim = document.getElementById("dataFim")?.value;
   const statusFiltro = document.getElementById("filtroStatus")?.value;
 
+  // 1. QUERY CORRIGIDA: Inclui orcamento_itens e os dados do cliente
   let query = supabaseClient
     .from("orcamentos")
     .select(`
       *,
+      clientes (nome, whatsapp, endereco),
       orcamento_ambientes (
         *,
         tipos_laje (nome)
+      ),
+      orcamento_itens (
+        *,
+        produtos_avulsos (nome)
       )
     `)
     .order("criado_em", { ascending: false });
@@ -802,6 +844,7 @@ async function carregarOrcamentos(clienteId, nomeCliente) {
   const { data, error } = await query;
 
   if (error) {
+    console.error(error);
     div.innerHTML = "Erro ao carregar orçamentos.";
     return;
   }
@@ -818,13 +861,12 @@ async function carregarOrcamentos(clienteId, nomeCliente) {
     const dataFormatada = new Date(o.criado_em).toLocaleDateString("pt-BR");
 
     html += `
-      <div class="card-orcamento" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #fff;">
+      <div class="card-orcamento">
         
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <strong>Orçamento #${o.numero || '—'}</strong>
 
-          <!-- 👑 DROPDOWN DE STATUS -->
-          <select onchange="mudarStatus('${o.id}', this.value)" style="font-weight:bold;">
+          <select onchange="mudarStatus('${o.id}', this.value)" style="font-weight:bold; padding: 5px; border-radius: 4px;">
             <option value="PENDENTE" ${o.status === "PENDENTE" ? "selected" : ""}>Pendente</option>
             <option value="EM_PRODUCAO" ${o.status === "EM_PRODUCAO" ? "selected" : ""}>Produção</option>
             <option value="PRODUZIDO" ${o.status === "PRODUZIDO" ? "selected" : ""}>Produzido</option>
@@ -837,34 +879,28 @@ async function carregarOrcamentos(clienteId, nomeCliente) {
         <small>Criado em: ${dataFormatada}</small>
         
         <table style="width: 100%; margin-top:10px; font-size: 0.85em; border-collapse: collapse;">
-          <tr style="border-bottom: 1px solid #eee; text-align:left;">
-            <th>Ambiente</th>
-            <th>Vigas</th>
-            <th style="text-align:right">Subtotal</th>
-          </tr>
-
           ${o.orcamento_ambientes.map(amb => `
-            <tr>
-              <td>
-                ${amb.nome}<br>
-                <small>${amb.tipos_laje?.nome || ''}</small>
-              </td>
-              <td><strong>${amb.qtd_vigas || 0} un</strong></td>
-              <td style="text-align:right">
-                R$ ${Number(amb.subtotal).toLocaleString('pt-BR',{minimumFractionDigits:2})}
-              </td>
+            <tr style="border-bottom: 1px solid #f5f5f5;">
+              <td style="padding: 5px 0;">${amb.nome} (${amb.tipos_laje?.nome || 'Laje'})</td>
+              <td style="text-align:right">R$ ${Number(amb.subtotal).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+            </tr>
+          `).join('')}
+          ${o.orcamento_itens.map(item => `
+            <tr style="border-bottom: 1px solid #f5f5f5;">
+              <td style="padding: 5px 0;">${item.quantidade}x ${item.produtos_avulsos?.nome || 'Produto'}</td>
+              <td style="text-align:right">R$ ${Number(item.quantidade * item.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
             </tr>
           `).join('')}
         </table>
 
-        <div style="margin-top:10px; padding:10px; background:#f9f9f9; border-radius:5px;">
+        <div style="margin-top:10px; padding:10px; background:#f9f9f9; border-radius:5px; display:flex; justify-content:space-between;">
+          <span>Frete: R$ ${Number(o.frete).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
           <strong>Total: R$ ${Number(o.total_final).toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>
         </div>
 
-        <!-- AÇÕES LIMPAS -->
         <div style="margin-top:10px; display:flex; gap:10px;">
-          <button onclick="window.print()" style="background:var(--primary)">
-            Imprimir
+          <button onclick='imprimirOrcamento(${JSON.stringify(o)})' style="background:#28a745; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; flex:1; font-weight:bold;">
+            🖨️ Imprimir Via Lajes Brasil (A4 Meia Folha)
           </button>
         </div>
 
@@ -1130,7 +1166,38 @@ async function mudarStatus(id, novoStatus) {
     .eq("id", id);
 
   if (error) return alert(error.message);
-  location.reload(); // Recarrega para atualizar a lista
+  // Em vez de recarregar a página toda, chama a busca novamente
+  carregarOrcamentos(clienteSelecionadoId, nomeHistoricoAtual);
+}
+
+async function logout() {
+  await supabaseClient.auth.signOut();
+  window.location.href = "index.html";
+}
+
+async function carregarLajes() {
+  const { data, error } = await supabaseClient
+    .from("tipos_laje")
+    .select("*")
+    .eq("ativo", true);
+  if (!error) lajesGlobais = data;
+}
+
+// Esta função deve ser a ÚLTIMA do arquivo. Remova qualquer "}" que sobrar abaixo dela.
+async function imprimirOrcamentoPorId(id) {
+  const { data: orc, error } = await supabaseClient
+    .from("orcamentos")
+    .select(`
+      *,
+      clientes (nome, whatsapp, endereco),
+      orcamento_ambientes (*, tipos_laje (nome)),
+      orcamento_itens (*, produtos_avulsos (nome))
+    `)
+    .eq("id", id)
+    .single();
+
+  if (error || !orc) return alert("Erro ao carregar orçamento");
+  imprimirOrcamento(orc);
 }
 
 async function atualizarObservacao(id, texto) {
@@ -1254,11 +1321,31 @@ function filtrarOrcamentos() {
   }
 
   renderizarOrcamentos(filtrados);
-}
+};
 
-function filtrarOrcamentos() {
-  carregarOrcamentos(
-    clienteSelecionadoId || null,
-    nomeHistoricoAtual || "Orçamentos"
-  );
-}
+async function imprimirOrcamentoPorId(id) {
+
+  const { data: orc, error } = await supabaseClient
+    .from("orcamentos")
+    .select(`
+      *,
+      clientes (nome, whatsapp, endereco),
+      orcamento_ambientes (
+        *,
+        tipos_laje (nome)
+      ),
+      orcamento_itens (
+        *,
+        produtos_avulsos (nome)
+      )
+    `)
+    .eq("id", id)
+    .single();
+
+  if (error || !orc) {
+    alert("Erro ao carregar orçamento");
+    return;
+  }
+
+  imprimirOrcamento(orc)
+};

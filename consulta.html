@@ -3,109 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Consulta de Orçamentos</title>
+  <title>Consulta de Orçamentos - Lajes Brasil</title>
   <link rel="stylesheet" href="style.css">
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-
 <body>
   <div class="app-container">
     <div class="screen">
-<header class="screen-header">
+      <header class="screen-header">
+        <a href="conf.html"><i data-lucide="settings"></i> Configurações</a>
+        <a href="cliente.html"><i data-lucide="user-plus"></i> Novo Cliente</a>
+        <a href="orcamento.html"><i data-lucide="file-plus"></i> Novo Orçamento</a>
+        <a href="consulta.html"><i data-lucide="search"></i> Consultar</a>
+        <a href="historico.html"><i data-lucide="archive"></i> Histórico</a>
+        <a href="#" onclick="logout()"><i data-lucide="log-out"></i> Sair</a>
+      </header>
 
-<a href="conf.html">
-<i data-lucide="settings"></i>
-Configurações
-</a>
+      <main class="screen-content">
+        <h1><i data-lucide="file-text"></i> Consulta de Orçamentos</h1>
 
-<a href="cliente.html">
-<i data-lucide="user-plus"></i>
-Novo Cliente
-</a>
+        <label for="cliente_busca"><i data-lucide="search"></i> Buscar cliente</label>
+        <input id="cliente_busca" placeholder="Digite nome ou WhatsApp" autocomplete="off" oninput="buscarClientesConsulta(this.value)">
 
-<a href="orcamento.html">
-<i data-lucide="file-plus"></i>
-Novo Orçamento
-</a>
+        <ul id="listaClientes" class="lista-suspensa"></ul>
 
-<a href="consulta.html">
-<i data-lucide="search"></i>
-Consultar
-</a>
+        <div class="filtros-container" style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+          <div>
+            <label>Status</label><br>
+            <select id="filtroStatus" onchange="filtrarOrcamentos()">
+              <option value="">Todos</option>
+              <option value="PENDENTE">Pendente</option>
+              <option value="EM_PRODUCAO">Em Produção</option>
+              <option value="PRODUZIDO">Produzido</option>
+              <option value="ESTOQUE">Estoque</option>
+              <option value="ENTREGUE">Entregue</option>
+              <option value="CANCELADO">Cancelado</option>
+              <option value="ARQUIVADO">Arquivado</option>
+            </select>
+          </div>
+          <div>
+            <label>De</label><br>
+            <input type="date" id="dataInicio" onchange="filtrarOrcamentos()">
+          </div>
+          <div>
+            <label>Até</label><br>
+            <input type="date" id="dataFim" onchange="filtrarOrcamentos()">
+          </div>
+        </div>
 
-<a href="historico.html">
-<i data-lucide="archive"></i>
-Histórico
-</a>
-
-<a href="#" onclick="logout()">
-<i data-lucide="log-out"></i>
-Sair
-</a>
-
-</header>
-<main class="screen-content">
-  <h1><i data-lucide="file-text"></i> Consulta de Orçamentos</h1>
-
-  <label for="cliente_busca">
-    <i data-lucide="search"></i> Buscar cliente
-  </label>
-
-  <input
-    id="cliente_busca"
-    placeholder="Digite nome ou WhatsApp"
-    autocomplete="off"
-    oninput="buscarClientesConsulta(this.value)"
-  >
-
-  <ul id="listaClientes"></ul>
-
-  <div style="margin-top:10px;">
-<div style="margin-top:10px; display:flex; gap:10px; align-items:end; flex-wrap:wrap;">
-
-  <div>
-    <label>Status</label><br>
-    <select id="filtroStatus" onchange="filtrarOrcamentos()">
-      <option value="">Todos</option>
-      <option value="PENDENTE">Pendente</option>
-      <option value="EM_PRODUCAO">Em Produção</option>
-      <option value="PRODUZIDO">Produzido</option>
-      <option value="ESTOQUE">Estoque</option>
-      <option value="ENTREGUE">Entregue</option>
-      <option value="CANCELADO">Cancelado</option>
-      <option value="ARQUIVADO">Arquivado</option>
-    </select>
-  </div>
-
-  <div>
-    <label>De</label><br>
-    <input type="date" id="dataInicio" onchange="filtrarOrcamentos()">
-  </div>
-
-  <div>
-    <label>Até</label><br>
-    <input type="date" id="dataFim" onchange="filtrarOrcamentos()">
-  </div>
-
-</div>
-
-  <div id="orcamentos" class="resultado"></div>
-</main>
+        <div id="orcamentos" class="resultado" style="margin-top:20px;"></div>
+      </main>
     </div>
   </div>
 
   <script>
-    // Inicializa os ícones e protege a página assim que o DOM carregar
     document.addEventListener("DOMContentLoaded", () => {
-      lucide.createIcons();
-      
-      // Chama a função de proteção definida no app.js
-      if (typeof protegerPaginaAdmin === "function") {
-        protegerPaginaAdmin();
-      }
+      if (window.lucide) lucide.createIcons();
+      if (typeof protegerPaginaAdmin === "function") protegerPaginaAdmin();
     });
   </script>
 </body>
