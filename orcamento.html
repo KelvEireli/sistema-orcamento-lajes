@@ -159,23 +159,22 @@ Salvar Orçamento
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
-
-  lucide.createIcons()
+  lucide.createIcons();
 
   if (typeof protegerPaginaAdmin === "function")
-    await protegerPaginaAdmin()
+    await protegerPaginaAdmin();
 
   if (typeof carregarLajes === "function")
-    await carregarLajes()
+    await carregarLajes();
 
   if (typeof carregarProdutosOrcamento === "function")
-    await carregarProdutosOrcamento()
+    await carregarProdutosOrcamento();
 
-  // agora sim
-  adicionarAmbiente()
+  if (typeof carregarConfiguracoes === "function")
+    await carregarConfiguracoes();     // ← IMPORTANTE
 
-})
-
+  adicionarAmbiente();
+});
 
 </script>
 
