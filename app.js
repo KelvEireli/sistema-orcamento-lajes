@@ -193,10 +193,14 @@ async function protegerPaginaAdmin() {
 async function selecionarCliente(id, nome, whatsapp) {
   const lista = document.getElementById("listaClientes");
   const inputBusca = document.getElementById("cliente_busca");
+  const inputNome = document.getElementById("cliente_nome");
+  const inputWhats = document.getElementById("whatsapp");
   const orcamentosDiv = document.getElementById("orcamentos");
 
   if (lista) { lista.style.display = "none"; lista.innerHTML = ""; }
   if (inputBusca) inputBusca.value = nome;
+  if (inputNome) inputNome.value = nome;
+  if (inputWhats) inputWhats.value = whatsapp || "";
 
   clienteSelecionadoId = id;
   nomeHistoricoAtual = nome;
@@ -220,8 +224,7 @@ async function selecionarCliente(id, nome, whatsapp) {
       return;
     }
 
-    // SALVA NA VARIÁVEL GLOBAL PARA O FILTRO FUNCIONAR
-    orcamentosCarregados = orcamentos; 
+    orcamentosCarregados = orcamentos;
     renderizarOrcamentos(orcamentos);
   }
 }
@@ -672,17 +675,19 @@ let calculoAtual = {
 
 
 function mostrarResultado() {
+  const resultadoDiv = document.getElementById("resultado");
   const frete = parseFloat(document.getElementById("frete").value) || 0;
   const multiplicadorPagamento = parseFloat(document.getElementById("pagamento").value) || 1;
 
-  let subtotalLajes = 0;
+  let subtotalLajesBase = 0;
+  let totalExtraVigas = 0;
   let custoLajes = 0;
   let areaTotal = 0;
 
   const ambientes = document.querySelectorAll(".ambiente");
 
   if (ambientes.length === 0) {
-    document.getElementById("resultado").innerHTML = "Adicione pelo menos um ambiente.";
+    resultadoDiv.style.display = "none";
     return;
   }
 
@@ -698,83 +703,74 @@ function mostrarResultado() {
     const laje = lajesGlobais.find(l => l.id == lajeId);
     if (!laje) return;
 
-    // --- CÁLCULO DE QUANTIDADE DE VIGAS (mantido igual) ---
     let qtdVigas = 0;
     const nomeLaje = laje.nome.toLowerCase();
+    if (nomeLaje.includes("painel treliçado"))           qtdVigas = largura * 4;
+    else if (nomeLaje.includes("convencional"))          qtdVigas = largura * 2.94;
+    else if (nomeLaje.includes("treliça") && nomeLaje.includes("isopor"))   qtdVigas = largura / 0.47;
+    else if (nomeLaje.includes("treliça") && nomeLaje.includes("cerâmica")) qtdVigas = largura / 0.37;
 
-    if (nomeLaje.includes("painel treliçado")) {
-      qtdVigas = largura * 4;
-    } 
-    else if (nomeLaje.includes("convencional")) {
-      qtdVigas = largura * 2.94;
-    } 
-    else if (nomeLaje.includes("treliça") && nomeLaje.includes("isopor")) {
-      qtdVigas = largura / 0.47;
-    } 
-    else if (nomeLaje.includes("treliça") && nomeLaje.includes("cerâmica")) {
-      qtdVigas = largura / 0.37;
-    }
+    if (spanVigas) spanVigas.innerText = Math.ceil(qtdVigas);
 
-    if (spanVigas) {
-      spanVigas.innerText = Math.ceil(qtdVigas);
-    }
-
-    // === NOVA LÓGICA DE ACRÉSCIMO POR TAMANHO DA VIGA ===
     const { multiplier, aplicarPercentual } = calcularExtraViga(laje, largura);
-
     let precoM2Efetivo = laje.preco_venda_m2;
-    if (aplicarPercentual) {
-      precoM2Efetivo *= 1.13;   // +13% para treliça isopor/cerâmica a partir de 5m
-    }
+    if (aplicarPercentual) precoM2Efetivo *= 1.13;
 
-    const extraViga = multiplier * precoVigaP;
-    const subtotalAmbiente = (area * precoM2Efetivo) + extraViga;
+    const extraVigaAmbiente = multiplier * precoVigaP;
 
-    // Custo permanece o mesmo (sem acréscimo)
-    const custoAmbiente = area * laje.custo_m2;
-
-    subtotalLajes += subtotalAmbiente;
-    custoLajes += custoAmbiente;
-    areaTotal += area;
+    subtotalLajesBase += area * laje.preco_venda_m2;
+    totalExtraVigas   += extraVigaAmbiente;
+    custoLajes        += area * laje.custo_m2;
+    areaTotal         += area;
   });
 
-  // 🔹 PRODUTOS AVULSOS
   let totalAvulsosVenda = 0;
   let totalAvulsosCusto = 0;
   document.querySelectorAll(".qtd-avulso").forEach(input => {
-    const qtd = parseInt(input.value) || 0;
+    const qtd   = parseInt(input.value) || 0;
     const preco = parseFloat(input.dataset.preco) || 0;
     const custo = parseFloat(input.dataset.custo) || 0;
     totalAvulsosVenda += qtd * preco;
     totalAvulsosCusto += qtd * custo;
   });
 
-  const subtotalGeral = subtotalLajes + totalAvulsosVenda;
-  const totalFinal = (subtotalGeral + frete) * multiplicadorPagamento;
-  const custoTotal = custoLajes + totalAvulsosCusto;
-  const lucro = totalFinal - custoTotal;
+  const subtotalLajesComExtra = subtotalLajesBase + totalExtraVigas;
+  const subtotalGeral = subtotalLajesComExtra + totalAvulsosVenda;
+  const totalFinal    = (subtotalGeral + frete) * multiplicadorPagamento;
+  const custoTotal    = custoLajes + totalAvulsosCusto;
+  const lucro         = totalFinal - custoTotal;
 
-  calculoAtual = {
-    subtotal: subtotalGeral,
-    custoTotal: custoTotal,
-    lucro: lucro,
-    totalFinal: totalFinal
-  };
+  calculoAtual = { subtotal: subtotalGeral, custoTotal, lucro, totalFinal };
 
-  document.getElementById("resultado").innerHTML = `
-    <div style="text-align:left;font-size:0.9em">
-      Área total: <strong>${areaTotal.toFixed(2)} m²</strong><br>
-      Lajes: R$ ${subtotalLajes.toLocaleString('pt-BR',{minimumFractionDigits:2})}<br>
-      Produtos: R$ ${totalAvulsosVenda.toLocaleString('pt-BR',{minimumFractionDigits:2})}<br>
-      Frete: R$ ${frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}
+  // ✅ Exibe e preenche com classes do novo CSS
+  resultadoDiv.style.display = "block";
+  resultadoDiv.innerHTML = `
+    <div class="linha-resultado">
+      <span>Área total</span>
+      <span>${areaTotal.toFixed(2)} m²</span>
     </div>
-    <hr>
-    <div style="font-size:1.2em;color:var(--primary)">
-      Total: <strong>R$ ${totalFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>
+    <div class="linha-resultado">
+      <span>Lajes (base)</span>
+      <span>R$ ${subtotalLajesBase.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+    </div>
+    <div class="linha-resultado">
+      <span>+ Acréscimo vigas</span>
+      <span>R$ ${totalExtraVigas.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+    </div>
+    <div class="linha-resultado">
+      <span>Produtos</span>
+      <span>R$ ${totalAvulsosVenda.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+    </div>
+    <div class="linha-resultado">
+      <span>Frete</span>
+      <span>R$ ${frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+    </div>
+    <div class="total-resultado">
+      <span>TOTAL FINAL</span>
+      <span>R$ ${totalFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
     </div>
   `;
 }
-
 
 async function salvarOrcamento() {
   if (!clienteSelecionadoId) {

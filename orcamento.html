@@ -24,135 +24,135 @@
 <div class="app-container">
 <div class="screen">
 
-<!-- HEADER -->
-<header class="screen-header">
+  <!-- HEADER -->
+  <header class="screen-header">
 
-<a href="conf.html">
-<i data-lucide="settings"></i>
-Configurações
-</a>
+    <!-- Logo -->
+    <a href="orcamento.html" class="header-logo" style="text-decoration:none;">
+      <img
+        src="https://dtznxqqcyrzlaijjbwzr.supabase.co/storage/v1/object/public/logos/Gemini_Generated_Image_guq5kaguq5kaguq5.png"
+        alt="Logo"
+      >
+      <div>
+        <div class="header-logo-name">Lajes Brasil</div>
+        <div class="header-logo-sub">Sistema de Orçamentos</div>
+      </div>
+    </a>
 
-<a href="cliente.html">
-<i data-lucide="user-plus"></i>
-Novo Cliente
-</a>
+    <a href="conf.html">
+      <i data-lucide="settings"></i>
+      Configurações
+    </a>
 
-<a href="orcamento.html">
-<i data-lucide="file-plus"></i>
-Novo Orçamento
-</a>
+    <a href="cliente.html">
+      <i data-lucide="user-plus"></i>
+      Novo Cliente
+    </a>
 
-<a href="consulta.html">
-<i data-lucide="search"></i>
-Consultar
-</a>
+    <a href="orcamento.html" aria-current="page">
+      <i data-lucide="file-plus"></i>
+      Novo Orçamento
+    </a>
 
-<a href="historico.html">
-<i data-lucide="archive"></i>
-Histórico
-</a>
+    <a href="consulta.html">
+      <i data-lucide="search"></i>
+      Consultar
+    </a>
 
-<a href="#" onclick="logout()">
-<i data-lucide="log-out"></i>
-Sair
-</a>
+    <a href="historico.html">
+      <i data-lucide="archive"></i>
+      Histórico
+    </a>
 
-</header>
+    <a href="#" onclick="logout()">
+      <i data-lucide="log-out"></i>
+      Sair
+    </a>
 
-
-<!-- CONTEÚDO -->
-<main class="screen-content">
-
-<h1>
-<i data-lucide="file-text"></i>
-Novo Orçamento
-</h1>
-
-<div class="card">
-
-<!-- CLIENTE -->
-<label>Cliente</label>
-
-<input
-id="cliente_nome"
-placeholder="Digite para buscar o cliente"
-oninput="buscarClientes(this.value)"
->
-
-<ul id="listaClientes"></ul>
+  </header>
 
 
-<!-- WHATSAPP -->
-<label>WhatsApp</label>
-<input type="tel" id="whatsapp" placeholder="Ex: 32999999999">
+  <!-- CONTEÚDO -->
+  <main class="screen-content">
 
+    <h1>
+      <i data-lucide="file-text"></i>
+      Novo Orçamento
+    </h1>
 
-<!-- AMBIENTE -->
-<h3>Medidas</h3>
+    <div class="card">
 
-<div id="listaAmbientes"></div>
+      <!-- CLIENTE -->
+      <label>Cliente</label>
+      <input
+        id="cliente_nome"
+        placeholder="Digite para buscar o cliente..."
+        oninput="buscarClientes(this.value)"
+      >
+      <ul id="listaClientes"></ul>
 
-<button type="button" onclick="adicionarAmbiente()">
-+ Nova Medida
-</button>
-<!-- ENDEREÇO -->
-<label>Endereço de Entrega</label>
-<input id="endereco_entrega" placeholder="Rua, número, bairro">
+      <!-- WHATSAPP -->
+      <label>WhatsApp</label>
+      <input type="tel" id="whatsapp" placeholder="Ex: 32999999999">
 
+      <!-- AMBIENTES -->
+      <h3>
+        <i data-lucide="ruler"></i>
+        Medidas
+      </h3>
 
+      <div id="listaAmbientes"></div>
 
+      <button type="button" onclick="adicionarAmbiente()">
+        <i data-lucide="plus-circle"></i>
+        Nova Medida
+      </button>
 
-<!-- PRODUTOS -->
-<h3>
-<i data-lucide="package"></i>
-Produtos Avulsos
-</h3>
+      <!-- ENDEREÇO -->
+      <label>Endereço de Entrega</label>
+      <input id="endereco_entrega" placeholder="Rua, número, bairro">
 
-<div id="listaProdutosAvulsos" class="card-grid"></div>
+      <!-- PRODUTOS -->
+      <h3>
+        <i data-lucide="package"></i>
+        Produtos Avulsos
+      </h3>
 
+      <div id="listaProdutosAvulsos" class="card-grid"></div>
 
+      <!-- FRETE -->
+      <label>Frete (R$)</label>
+      <input
+        type="number"
+        id="frete"
+        value="0"
+        oninput="mostrarResultado()"
+      >
 
+      <!-- PAGAMENTO -->
+      <label>Forma de Pagamento</label>
+      <select id="pagamento" onchange="mostrarResultado()">
+        <option value="1">À vista</option>
+        <option value="1.1">Parcelado</option>
+      </select>
 
+      <!-- PRAZO -->
+      <label>Data mínima de entrega</label>
+      <input type="date" id="data">
 
-<!-- FRETE -->
-<label>Frete (R$)</label>
-<input
-type="number"
-id="frete"
-value="0"
-oninput="mostrarResultado()"
->
+      <!-- RESULTADO -->
+      <div id="resultado" class="resultado" style="display:none;"></div>
 
+      <!-- BOTÃO -->
+      <button onclick="salvarOrcamento()">
+        <i data-lucide="save"></i>
+        Salvar Orçamento
+      </button>
 
-<!-- PAGAMENTO -->
-<label>Forma de Pagamento</label>
+    </div>
 
-<select id="pagamento" onchange="mostrarResultado()">
-<option value="1">À vista</option>
-<option value="1.1">Parcelado</option>
-</select>
+  </main>
 
-
-<!-- PRAZO -->
-<label>Data mínima de entrega</label>
-<input type="date" id="data">
-
-
-<!-- RESULTADO -->
-<div id="resultado" class="resultado"></div>
-
-
-<!-- BOTÃO -->
-<button onclick="salvarOrcamento()">
-
-<i data-lucide="save"></i>
-Salvar Orçamento
-
-</button>
-
-</div>
-
-</main>
 </div>
 </div>
 
@@ -171,11 +171,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     await carregarProdutosOrcamento();
 
   if (typeof carregarConfiguracoes === "function")
-    await carregarConfiguracoes();     // ← IMPORTANTE
+    await carregarConfiguracoes();
 
   adicionarAmbiente();
 });
-
 </script>
 
 </body>

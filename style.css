@@ -1,127 +1,419 @@
 /* =================================================
-   BASE
+   IMPORTS
+================================================= */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+/* =================================================
+   DESIGN TOKENS
 ================================================= */
 :root {
-  --bg-main: #f1f5f9;
-  --primary: #4f46e5;
-  --primary-glow: rgba(79, 70, 229, 0.15);
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border-subtle: #e2e8f0;
+  /* Core Palette */
+  --navy:        #0f172a;
+  --navy-mid:    #1e293b;
+  --navy-light:  #334155;
+  --accent:      #f97316;
+  --accent-dim:  rgba(249,115,22,0.12);
+  --primary:     #2563eb;
+  --primary-dim: rgba(37,99,235,0.1);
+  --success:     #16a34a;
+  --danger:      #dc2626;
 
-  --radius-inner: 12px;
-  --radius-outer: 24px;
+  /* Neutral Surface */
+  --bg:          #f1f5f9;
+  --surface:     #ffffff;
+  --border:      #e2e8f0;
+  --border-mid:  #cbd5e1;
 
-  --shadow-premium: 0 20px 25px -5px rgb(0 0 0 / 0.1),
-                    0 8px 10px -6px rgb(0 0 0 / 0.1);
+  /* Text */
+  --text:        #0f172a;
+  --text-sub:    #475569;
+  --text-muted:  #94a3b8;
+
+  /* Radii */
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   16px;
+  --r-xl:   22px;
+
+  /* Shadow */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.07), 0 6px 20px rgba(0,0,0,0.06);
+  --shadow-lg:   0 20px 40px rgba(0,0,0,0.12);
 }
 
-* {
+/* =================================================
+   RESET & BASE
+================================================= */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html { font-size: 15px; }
+
 body {
-  font-family: 'Inter', sans-serif;
-  background: var(--bg-main);
-  display: flex;
-  justify-content: center;
-  padding: 20px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* =================================================
-   CONTAINER
+   APP CONTAINER
 ================================================= */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .screen {
-  width: 100%;
-  max-width: 900px;
-  background: rgba(255,255,255,0.9);
-  border-radius: var(--radius-outer);
-  box-shadow: var(--shadow-premium);
-  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* =================================================
-   HEADER
+   TOPBAR / HEADER
 ================================================= */
 .screen-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--navy);
   display: flex;
-  gap: 28px;
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 30px;
-  padding-bottom: 15px;
+  align-items: center;
+  gap: 4px;
+  padding: 0 28px;
+  height: 62px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
 }
 
+/* Logo area */
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 24px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--navy-light);
+  padding-right: 24px;
+}
+
+.header-logo img {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.header-logo-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.header-logo-sub {
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Nav links */
 .screen-header a {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   text-decoration: none;
-  font-size: 14px;
-  color: var(--text-muted);
+  font-size: 13px;
   font-weight: 600;
+  color: #94a3b8;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  transition: color 0.15s, background 0.15s;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .screen-header a:hover {
-  color: var(--primary);
+  color: #fff;
+  background: rgba(255,255,255,0.08);
 }
 
-/* 🔥 ÍCONES MAIORES */
+.screen-header a.active,
+.screen-header a[aria-current="page"] {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+
 .screen-header svg {
-  width: 26px;
-  height: 26px;
-  stroke-width: 2.2;
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
+/* Logout pushed to end */
+.screen-header a:last-child {
+  margin-left: auto;
+  color: #64748b;
+}
+
+.screen-header a:last-child:hover {
+  color: #fca5a5;
+  background: rgba(220,38,38,0.15);
 }
 
 /* =================================================
-   INPUTS
+   SCREEN CONTENT
 ================================================= */
-input, select {
+.screen-content {
+  flex: 1;
+  max-width: 960px;
   width: 100%;
-  padding: 12px;
-  border: 1.5px solid var(--border-subtle);
-  border-radius: var(--radius-inner);
-  font-size: 14px;
-  margin-bottom: 10px;
+  margin: 0 auto;
+  padding: 36px 28px 60px;
 }
 
-input:focus {
+/* =================================================
+   PAGE TITLE
+================================================= */
+.screen-content h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.screen-content h1 svg {
+  width: 22px;
+  height: 22px;
+  color: var(--primary);
+  stroke-width: 2;
+}
+
+/* =================================================
+   CARD
+================================================= */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 28px 28px 20px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+}
+
+.card h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 20px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card h3:first-child { margin-top: 0; }
+
+.card h3 svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+/* =================================================
+   SECTION TITLES (Admin)
+================================================= */
+.screen-content > h2,
+.screen > h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 32px 0 12px;
+  padding-left: 4px;
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+}
+
+/* =================================================
+   LABELS
+================================================= */
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-sub);
+  margin-bottom: 6px;
+  margin-top: 16px;
+}
+
+label:first-child { margin-top: 0; }
+
+/* =================================================
+   INPUTS & SELECTS
+================================================= */
+input, select, textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+
+input::placeholder { color: var(--text-muted); }
+
+input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-glow);
+  box-shadow: 0 0 0 3px var(--primary-dim);
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+/* Spacing between form fields */
+.card > input,
+.card > select {
+  margin-bottom: 4px;
 }
 
 /* =================================================
-   BOTÃO PRINCIPAL
+   BUTTONS
 ================================================= */
 button {
   border: none;
-  border-radius: var(--radius-inner);
+  border-radius: var(--r-md);
   cursor: pointer;
+  font-family: inherit;
   font-weight: 600;
+  transition: all 0.15s;
 }
 
-button:not(.btn-remover) {
+/* Primary action button */
+button:not(.btn-remover):not(.btn-sec) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
-  margin-top: 15px;
-  padding: 14px;
-  background: linear-gradient(135deg, #4f46e5, #4338ca);
-  color: white;
+  margin-top: 20px;
+  padding: 13px 20px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.2);
 }
 
-button:not(.btn-remover):hover {
-  background: linear-gradient(135deg, #4338ca, #3730a3);
+button:not(.btn-remover):not(.btn-sec):hover {
+  background: var(--navy-mid);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(15,23,42,0.25);
+}
+
+button:not(.btn-remover):not(.btn-sec):active {
+  transform: translateY(0);
+}
+
+button:not(.btn-remover):not(.btn-sec) svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+/* Remove / danger button */
+.btn-remover {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  background: #fee2e2;
+  color: var(--danger);
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+  border: 1px solid #fecaca;
+}
+
+.btn-remover:hover {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
 }
 
 /* =================================================
-   AMBIENTES
+   AUTOCOMPLETE LIST
+================================================= */
+#listaClientes {
+  list-style: none;
+  border: 1.5px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  position: relative;
+  z-index: 50;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+#listaClientes li {
+  padding: 11px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  transition: background 0.1s;
+}
+
+#listaClientes li:last-child { border-bottom: none; }
+
+#listaClientes li:hover {
+  background: var(--primary-dim);
+}
+
+/* =================================================
+   AMBIENTES / MEDIDAS
 ================================================= */
 .ambiente {
-  padding: 12px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-inner);
+  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
   margin-bottom: 10px;
+  background: #f8fafc;
+  transition: border-color 0.15s;
+}
+
+.ambiente:focus-within {
+  border-color: var(--primary);
   background: #fff;
 }
 
@@ -137,48 +429,192 @@ button:not(.btn-remover):hover {
   flex: 1;
 }
 
-.amb-nome {
-  flex: 2;
-}
-
+.amb-nome       { flex: 2; min-width: 0; }
 .amb-largura,
-.amb-comprimento {
-  flex: 0 0 80px;
+.amb-comprimento { flex: 0 0 90px; }
+.amb-laje       { flex: 1; min-width: 100px; }
+
+.ambiente input,
+.ambiente select {
+  margin-bottom: 0;
+  font-size: 13px;
+  padding: 8px 10px;
+  background: var(--surface);
 }
 
-.amb-laje {
-  flex: 1;
+.info-vigas {
+  margin-top: 8px;
+  font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  color: var(--primary);
+  padding-left: 2px;
 }
 
-/* botão remover lateral */
-.btn-remover {
-  width: 36px;
-  height: 36px;
-  background: #ef4444;
-  color: white;
-  border-radius: 6px;
+/* =================================================
+   PRODUTOS AVULSOS
+================================================= */
+.card-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.item-avulso {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--r-md) !important;
+  background: var(--surface) !important;
+  transition: border-color 0.15s;
 }
 
-.btn-remover:hover {
-  background: #dc2626;
-}
+.item-avulso:hover { border-color: var(--border-mid) !important; }
 
-/* info */
-.info-vigas {
-  margin-top: 6px;
+.item-avulso span {
   font-size: 13px;
-  color: var(--primary);
+  color: var(--text);
+}
+
+.item-avulso input[type="number"] {
+  width: 68px !important;
+  margin: 0 !important;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px !important;
+  padding: 7px 8px !important;
+}
+
+/* =================================================
+   RESULTADO
+================================================= */
+.resultado {
+  margin-top: 20px;
+  background: var(--navy);
+  color: #fff;
+  border-radius: var(--r-md);
+  padding: 18px 20px;
+  font-size: 14px;
+}
+
+.resultado .linha-resultado {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.resultado .total-resultado {
+  display: flex;
+  justify-content: space-between;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #334155;
+}
+
+.resultado .total-resultado span:last-child {
+  color: var(--accent);
+}
+
+/* =================================================
+   ADMIN CARDS (Lajes, Produtos)
+================================================= */
+#listaLajes .card,
+#listaProdutos .card {
+  padding: 16px 20px;
+}
+
+#listaLajes .card strong,
+#listaProdutos .card strong {
+  font-size: 15px;
+  color: var(--text);
+}
+
+#listaLajes .card br + small,
+#listaProdutos .card br + small {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* =================================================
+   CONFIG SECTION
+================================================= */
+#configGerais {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+}
+
+/* =================================================
+   CARD-ORCAMENTO (Consulta)
+================================================= */
+.card-orcamento {
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-card) !important;
+  overflow: hidden;
 }
 
 /* =================================================
    RESPONSIVO
 ================================================= */
 @media (max-width: 768px) {
+  .screen-header {
+    padding: 0 16px;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .screen-header::-webkit-scrollbar { display: none; }
+
+  .header-logo-name,
+  .header-logo-sub { display: none; }
+
+  .header-logo {
+    border-right: none;
+    padding-right: 12px;
+    margin-right: 8px;
+  }
+
+  .screen-header a {
+    padding: 8px;
+    font-size: 0;
+    gap: 0;
+  }
+
+  .screen-header a svg {
+    width: 18px;
+    height: 18px;
+    font-size: initial;
+  }
+
+  .screen-content {
+    padding: 24px 16px 48px;
+  }
+
+  .card { padding: 20px 16px 16px; }
+
   .inputs-ambiente {
+    flex-wrap: wrap;
+  }
+
+  .amb-largura,
+  .amb-comprimento {
+    flex: 0 0 calc(50% - 4px);
+  }
+}
+
+@media (max-width: 480px) {
+  .linha-ambiente {
     flex-wrap: wrap;
   }
 }

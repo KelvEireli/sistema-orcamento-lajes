@@ -1,60 +1,113 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>  
 <head>
   <meta charset="UTF-8">
-  <title>Painel Administrativo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações — Lajes Brasil</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="app.js" defer></script>
 </head>
 <body>
-<div class="app-container">
-  <div class="screen">
-    <main class="screen-content">
-      <h1>Área Administrativa</h1>
-      <div class="card">
-        <p>Configurações avançadas do sistema.</p>
-      </div>
-    </main>
 
-    <!-- HEADER (mantido igual) -->
-    <header class="screen-header">
-      <a href="conf.html"><i data-lucide="settings"></i> Configurações</a>
-      <a href="cliente.html"><i data-lucide="user-plus"></i> Novo Cliente</a>
-      <a href="orcamento.html"><i data-lucide="file-plus"></i> Novo Orçamento</a>
-      <a href="consulta.html"><i data-lucide="search"></i> Consultar</a>
-      <a href="historico.html"><i data-lucide="archive"></i> Histórico</a>
-      <a href="#" onclick="logout()"><i data-lucide="log-out"></i> Sair</a>
-    </header>
+<div class="app-container">
+<div class="screen">
+
+  <!-- HEADER -->
+  <header class="screen-header">
+
+    <!-- Logo -->
+    <a href="orcamento.html" class="header-logo" style="text-decoration:none;">
+      <img
+        src="https://dtznxqqcyrzlaijjbwzr.supabase.co/storage/v1/object/public/logos/Gemini_Generated_Image_guq5kaguq5kaguq5.png"
+        alt="Logo"
+      >
+      <div>
+        <div class="header-logo-name">Lajes Brasil</div>
+        <div class="header-logo-sub">Sistema de Orçamentos</div>
+      </div>
+    </a>
+
+    <a href="conf.html" aria-current="page">
+      <i data-lucide="settings"></i>
+      Configurações
+    </a>
+
+    <a href="cliente.html">
+      <i data-lucide="user-plus"></i>
+      Novo Cliente
+    </a>
+
+    <a href="orcamento.html">
+      <i data-lucide="file-plus"></i>
+      Novo Orçamento
+    </a>
+
+    <a href="consulta.html">
+      <i data-lucide="search"></i>
+      Consultar
+    </a>
+
+    <a href="historico.html">
+      <i data-lucide="archive"></i>
+      Histórico
+    </a>
+
+    <a href="#" onclick="logout()">
+      <i data-lucide="log-out"></i>
+      Sair
+    </a>
+
+  </header>
+
+  <!-- CONTEÚDO -->
+  <main class="screen-content">
+
+    <h1>
+      <i data-lucide="settings-2"></i>
+      Área Administrativa
+    </h1>
+
+    <div class="card">
+      <p style="color: var(--text-sub); font-size: 14px;">
+        Configurações avançadas do sistema. Gerencie tipos de laje, produtos e parâmetros gerais.
+      </p>
+    </div>
 
     <h2>Tipos de Laje</h2>
     <div id="listaLajes"></div>
-    <button onclick="abrirNovaLaje()">Nova Laje</button>
+    <button onclick="abrirNovaLaje()">
+      <i data-lucide="plus"></i>
+      Nova Laje
+    </button>
 
     <h2>Produtos Avulsos</h2>
     <div id="listaProdutos"></div>
-    <div id="formEdicaoProduto"></div> 
-    <button onclick="abrirNovoProduto()">Novo Produto</button>
+    <div id="formEdicaoProduto"></div>
+    <button onclick="abrirNovoProduto()">
+      <i data-lucide="plus"></i>
+      Novo Produto
+    </button>
 
-    <!-- NOVA SEÇÃO -->
     <h2>Configurações Gerais</h2>
     <div id="configGerais"></div>
-  </div>
+
+  </main>
+
+</div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+  lucide.createIcons();
   protegerPaginaAdmin();
   carregarLajesAdmin();
   carregarProdutosAdmin();
   carregarConfigGerais();
-  carregarConfiguracoes();   // ← Adicione esta linha
+  carregarConfiguracoes();
 });
 </script>
 
 </body>
-<script>
-window.addEventListener("load", () => { lucide.createIcons(); });
-</script>
 </html>
