@@ -231,97 +231,7 @@ async function selecionarCliente(id, nome, whatsapp) {
 // --- RENDERIZAÇÃO NA TELA (CONSULTA) ---
 
 
-function renderizarOrcamentos(orcamentos) {
-  const container = document.getElementById("orcamentos");
 
-  // Limpa o container antes de renderizar para não duplicar
-  container.innerHTML = "";
-
-  if (!orcamentos || orcamentos.length === 0) {
-    container.innerHTML = "<p style='text-align:center; color:#666; padding:20px;'>Nenhum orçamento encontrado.</p>";
-    return;
-  }
-
-  // Percorre os orçamentos criando elementos independentes
-  orcamentos.forEach(orc => {
-    const card = document.createElement("div");
-    card.className = "card-orcamento";
-    
-    // Estilos para garantir que o card ocupe a largura total e não aninhe
-    card.style.border = "1px solid #ddd";
-    card.style.padding = "15px";
-    card.style.marginBottom = "20px";
-    card.style.borderRadius = "8px";
-    card.style.background = "#fff";
-    card.style.boxShadow = "0 2px 4px rgba(0,0,0,0.05)";
-    card.style.width = "100%";
-    card.style.boxSizing = "border-box";
-
-    // Prepara as linhas de ambientes
-    const linhasAmbientes = orc.orcamento_ambientes?.map(amb => `
-      <tr>
-        <td style="padding:5px 0;"><strong>${amb.nome || 'Ambiente'}</strong> (${amb.tipos_laje?.nome || 'Laje'})</td>
-        <td style="text-align:center;">${amb.largura}x${amb.comprimento}</td>
-        <td style="text-align:right;">R$ ${(amb.subtotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-      </tr>
-    `).join('') || '';
-
-    // Prepara a seção de itens avulsos
-    let htmlItens = "";
-    if (orc.orcamento_itens && orc.orcamento_itens.length > 0) {
-      htmlItens = `
-        <div style="border-top: 1px dashed #eee; padding-top: 10px; margin-top: 10px;">
-          <small style="color: #666; text-transform: uppercase; font-weight: bold;">Produtos Avulsos</small>
-          <table style="width:100%; font-size:0.9em; border-collapse: collapse;">
-            ${orc.orcamento_itens.map(item => `
-              <tr>
-                <td style="padding:5px 0;">${item.quantidade}x ${item.produtos_avulsos?.nome || 'Produto'}</td>
-                <td style="text-align:right;">R$ ${(item.quantidade * (item.preco_unitario || 0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-              </tr>
-            `).join('')}
-          </table>
-        </div>
-      `;
-    }
-
-    // Monta o HTML interno do card
-    card.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
-        <div>
-          <h2 style="margin:0; color:#2c3e50;">Orçamento ${orc.numero || '—'}</h2>
-          <small style="color:#888;">${new Date(orc.criado_em).toLocaleDateString('pt-BR')}</small>
-        </div>
-        <button onclick="imprimirOrcamentoPorId('${orc.id}')" style="cursor:pointer; padding: 8px 12px; border-radius: 5px; border: 1px solid #ccc; background: #f9f9f9;">
-          🖨️ Imprimir 2 Vias
-        </button>
-      </div>
-      
-      <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
-
-      <table style="width:100%; font-size:0.9em; border-collapse: collapse; margin-bottom: 10px;">
-        <tbody>
-          ${linhasAmbientes}
-        </tbody>
-      </table>
-
-      ${htmlItens}
-
-      <div style="margin-top:15px; padding:12px; background:#f8f9fa; border-radius:5px; border: 1px solid #eee;">
-        <div style="display:flex; justify-content:space-between; font-size: 0.9em; margin-bottom: 5px; color: #555;">
-            <span>Frete:</span>
-            <span>R$ ${(orc.frete || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-weight:bold; color:#d32f2f; font-size:1.1em; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px;">
-          <span>Total Final:</span>
-          <span>R$ ${(orc.total_final || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-        </div>
-      </div>
-    `;
-
-    // Adiciona o card individualmente ao container
-    container.appendChild(card);
-  });
-}
 // --- FUNÇÃO DE IMPRESSÃO (A4 DIVIDIDO) ---
 
 // --- FUNÇÃO DE IMPRESSÃO (DIVIDE A FOLHA A4) ---
@@ -1310,102 +1220,7 @@ async function buscarClientesHistorico(nome) {
 }
 
 // Exemplo de como renderizar o card com os novos status
-function renderizarOrcamentos(orcamentos) {
-  const container = document.getElementById("orcamentos");
 
-  if (!orcamentos || orcamentos.length === 0) {
-    container.innerHTML = "<p>Nenhum orçamento encontrado.</p>";
-    return;
-  }
-
-  container.innerHTML = orcamentos.map(orc => `
-    <div class="card-orcamento" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-      
-      <div style="display: flex; justify-content: space-between; align-items:flex-start; flex-wrap: wrap; gap: 10px;">
-        <div>
-          <h2 style="margin:0; color:#2c3e50;">Orçamento ${orc.numero || '—'}</h2>
-          <strong style="display:block; color:#555; font-size:0.9em; margin-top:3px;">
-            Cliente: ${orc.clientes?.nome || 'Não identificado'}
-          </strong>
-          <small style="color:#888;">${new Date(orc.criado_em).toLocaleDateString('pt-BR')}</small>
-        </div>
-
-            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
-              <select onchange="mudarStatus('${orc.id}', this.value)" 
-                      style="padding:5px; border-radius:4px; border:1px solid #ccc; font-weight:bold; background:#f9f9f9; cursor:pointer;">
-                <option value="PENDENTE" ${orc.status === "PENDENTE" ? "selected" : ""}>Pendente</option>
-                <option value="EM_PRODUCAO" ${orc.status === "EM_PRODUCAO" ? "selected" : ""}>Em Produção</option>
-                <option value="PRODUZIDO" ${orc.status === "PRODUZIDO" ? "selected" : ""}>Produzido</option>
-                <option value="ENTREGUE" ${orc.status === "ENTREGUE" ? "selected" : ""}>Entregue</option>
-                <option value="CANCELADO" ${orc.status === "CANCELADO" ? "selected" : ""}>Cancelado</option>
-                <option value="ARQUIVADO" ${orc.status === "ARQUIVADO" ? "selected" : ""}>Arquivado</option>
-              </select>
-
-              <div style="display:flex; gap:5px;">
-                <button onclick="imprimirOrcamentoPorId('${orc.id}')" 
-                        style="background:#007bff; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:0.85em;">
-                  🖨️Imprimir
-                </button>
-
-                <button onclick="arquivarOrcamento('${orc.id}')" 
-                        style="background:#dc3545; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:0.85em;"
-                        title="Arquivar Orçamento">
-                  🗑️Apagar
-                </button>
-              </div>
-            </div>
-      
-      <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
-
-      <table style="width:100%; font-size:0.9em; border-collapse: collapse; margin-bottom: 10px;">
-        <thead>
-          <tr style="text-align:left; color:#777; font-size:0.8em; border-bottom: 1px solid #eee;">
-            <th style="padding-bottom:5px;">Ambiente</th>
-            <th style="text-align:center; padding-bottom:5px;">Medidas</th>
-            <th style="text-align:right; padding-bottom:5px;">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${orc.orcamento_ambientes.map(amb => `
-            <tr>
-              <td style="padding:8px 0; border-bottom:1px solid #f9f9f9;">
-                <strong>${amb.nome}</strong><br>
-                <small style="color:#666;">${amb.tipos_laje?.nome || 'Laje'}</small>
-              </td>
-              <td style="text-align:center; border-bottom:1px solid #f9f9f9;">${amb.largura}x${amb.comprimento}m</td>
-              <td style="text-align:right; border-bottom:1px solid #f9f9f9;">R$ ${Number(amb.subtotal).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-
-      ${orc.orcamento_itens && orc.orcamento_itens.length > 0 ? `
-        <div style="border-top: 1px dashed #eee; padding-top: 10px; margin-top: 10px;">
-          <small style="color: #666; text-transform: uppercase; font-weight:bold; font-size:0.75em;">Produtos Avulsos</small>
-          <table style="width:100%; font-size:0.9em; border-collapse: collapse;">
-            ${orc.orcamento_itens.map(item => `
-              <tr>
-                <td style="padding:5px 0;">${item.quantidade}x ${item.produtos_avulsos?.nome || 'Produto'}</td>
-                <td style="text-align:right;">R$ ${Number(item.quantidade * item.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-              </tr>
-            `).join('')}
-          </table>
-        </div>
-      ` : ''}
-
-      <div style="margin-top:15px; padding:12px; background:#f8f9fa; border-radius:5px; border:1px solid #eee;">
-        <div style="display:flex; justify-content:space-between; font-size: 0.9em; margin-bottom: 5px; color:#555;">
-            <span>Custo de Frete:</span>
-            <span>R$ ${Number(orc.frete).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-weight:bold; color:#d32f2f; font-size:1.15em; border-top: 1px solid #ddd; padding-top:5px; margin-top:5px;">
-          <span>VALOR TOTAL:</span>
-          <span>R$ ${Number(orc.total_final).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
 
 async function mudarStatus(id, novoStatus) {
   try {
@@ -1614,3 +1429,144 @@ async function imprimirOrcamentoPorId(id) {
 
   imprimirOrcamento(orc)
 };
+
+
+// =====================================================
+// Cole esta função no app.js substituindo TODAS as
+// versões antigas de renderizarOrcamentos (há duas).
+// =====================================================
+
+const STATUS_LABELS = {
+  PENDENTE:    "Pendente",
+  EM_PRODUCAO: "Em Produção",
+  PRODUZIDO:   "Produzido",
+  ENTREGUE:    "Entregue",
+  CANCELADO:   "Cancelado",
+  ARQUIVADO:   "Arquivado",
+};
+
+function renderizarOrcamentos(orcamentos) {
+  const container = document.getElementById("orcamentos");
+  container.innerHTML = "";
+
+  if (!orcamentos || orcamentos.length === 0) {
+    container.innerHTML = `
+      <div class="estado-vazio">
+        <p>Nenhum orçamento encontrado.</p>
+      </div>`;
+    return;
+  }
+
+  orcamentos.forEach(orc => {
+
+    // ── Linhas de ambientes ──────────────────────────
+    const linhasAmbientes = (orc.orcamento_ambientes || []).map(amb => `
+      <tr>
+        <td>
+          <strong>${amb.nome || 'Ambiente'}</strong>
+          <span class="amb-nome-laje">${amb.tipos_laje?.nome || 'Laje'}</span>
+        </td>
+        <td>${amb.largura}x${amb.comprimento}m</td>
+        <td>R$ ${Number(amb.subtotal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+      </tr>
+    `).join('');
+
+    // ── Produtos avulsos ─────────────────────────────
+    let htmlAvulsos = '';
+    if (orc.orcamento_itens && orc.orcamento_itens.length > 0) {
+      htmlAvulsos = `
+        <div class="secao-avulsos">
+          <div class="secao-avulsos-titulo">Produtos Avulsos</div>
+          <table>
+            ${orc.orcamento_itens.map(item => `
+              <tr>
+                <td>${item.quantidade}x ${item.produtos_avulsos?.nome || 'Produto'}</td>
+                <td>R$ ${Number(item.quantidade * (item.preco_unitario || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>`;
+    }
+
+    // ── Status badge ─────────────────────────────────
+    const status = orc.status || 'PENDENTE';
+    const statusLabel = STATUS_LABELS[status] || status;
+
+    // ── Monta o card ─────────────────────────────────
+    const card = document.createElement('div');
+    card.className = 'card-orcamento';
+    card.innerHTML = `
+
+      <!-- CABEÇALHO -->
+      <div class="card-orc-header">
+
+        <div>
+          <div class="card-orc-titulo">Orçamento #${orc.numero || '—'}</div>
+          <div class="card-orc-meta">
+            <strong>${orc.clientes?.nome || 'Cliente não identificado'}</strong>
+            <span>${new Date(orc.criado_em).toLocaleDateString('pt-BR')}</span>
+            <span class="status-badge status-${status}">${statusLabel}</span>
+          </div>
+        </div>
+
+        <div class="card-orc-acoes">
+          <select onchange="mudarStatus('${orc.id}', this.value)">
+            <option value="PENDENTE"    ${status === 'PENDENTE'    ? 'selected' : ''}>Pendente</option>
+            <option value="EM_PRODUCAO" ${status === 'EM_PRODUCAO' ? 'selected' : ''}>Em Produção</option>
+            <option value="PRODUZIDO"   ${status === 'PRODUZIDO'   ? 'selected' : ''}>Produzido</option>
+            <option value="ENTREGUE"    ${status === 'ENTREGUE'    ? 'selected' : ''}>Entregue</option>
+            <option value="CANCELADO"   ${status === 'CANCELADO'   ? 'selected' : ''}>Cancelado</option>
+            <option value="ARQUIVADO"   ${status === 'ARQUIVADO'   ? 'selected' : ''}>Arquivado</option>
+          </select>
+
+          <div class="card-orc-btns">
+            <button class="btn-acao btn-imprimir" onclick="imprimirOrcamentoPorId('${orc.id}')">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+              </svg>
+              Imprimir
+            </button>
+            <button class="btn-acao btn-arquivar" onclick="arquivarOrcamento('${orc.id}')">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+              </svg>
+              Arquivar
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CORPO -->
+      <div class="card-orc-body">
+        <table class="tabela-ambientes">
+          <thead>
+            <tr>
+              <th>Ambiente</th>
+              <th>Medidas</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${linhasAmbientes}
+          </tbody>
+        </table>
+        ${htmlAvulsos}
+      </div>
+
+      <!-- RODAPÉ -->
+      <div class="card-orc-footer">
+        <div class="footer-frete">
+          Frete: <span>R$ ${Number(orc.frete || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+        </div>
+        <div class="footer-total">
+          <small>Total Final</small>
+          <span class="footer-total-valor">R$ ${Number(orc.total_final || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+        </div>
+      </div>
+
+    `;
+
+    container.appendChild(card);
+  });
+}

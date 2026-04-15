@@ -3,63 +3,441 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Consulta de Orçamentos - Lajes Brasil</title>
+  <title>Consulta de Orçamentos — Lajes Brasil</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="app.js" defer></script>
+
+  <style>
+    /* ── Filtros ─────────────────────────────── */
+    .filtros-container {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .filtros-container > div {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 140px;
+    }
+
+    .filtros-container label {
+      margin: 0;
+    }
+
+    .filtros-container select,
+    .filtros-container input {
+      margin-bottom: 0;
+    }
+
+    /* ── Lista de orçamentos ─────────────────── */
+    #orcamentos {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Card de orçamento ───────────────────── */
+    .card-orcamento {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .card-orc-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .card-orc-titulo {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .card-orc-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .card-orc-meta strong {
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+
+    /* ── Status badge ────────────────────────── */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      gap: 5px;
+    }
+
+    .status-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .status-PENDENTE     { background: #fef9c3; color: #854d0e; }
+    .status-EM_PRODUCAO  { background: #dbeafe; color: #1e40af; }
+    .status-PRODUZIDO    { background: #dcfce7; color: #166534; }
+    .status-ENTREGUE     { background: #f0fdf4; color: #15803d; }
+    .status-CANCELADO    { background: #fee2e2; color: #991b1b; }
+    .status-ARQUIVADO    { background: #f1f5f9; color: #64748b; }
+
+    /* ── Ações do card ───────────────────────── */
+    .card-orc-acoes {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .card-orc-acoes select {
+      width: auto;
+      font-size: 12px;
+      padding: 6px 28px 6px 10px;
+      margin: 0;
+      font-weight: 600;
+      cursor: pointer;
+      background-color: var(--bg);
+    }
+
+    .card-orc-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-acao {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 12px;
+      border-radius: var(--r-sm);
+      font-size: 12px;
+      font-weight: 600;
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      width: auto !important;
+      margin: 0 !important;
+    }
+
+    .btn-acao svg {
+      width: 13px;
+      height: 13px;
+      stroke-width: 2;
+    }
+
+    .btn-imprimir {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+
+    .btn-imprimir:hover {
+      background: var(--navy-mid);
+      border-color: var(--navy-mid);
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-arquivar {
+      background: #fff;
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+
+    .btn-arquivar:hover {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ── Corpo do card ───────────────────────── */
+    .card-orc-body {
+      padding: 16px 20px;
+    }
+
+    /* ── Tabela de ambientes ─────────────────── */
+    .tabela-ambientes {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-bottom: 0;
+    }
+
+    .tabela-ambientes thead th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      padding: 0 0 8px;
+      border-bottom: 1.5px solid var(--border);
+    }
+
+    .tabela-ambientes thead th:nth-child(2) { text-align: center; }
+    .tabela-ambientes thead th:last-child    { text-align: right; }
+
+    .tabela-ambientes tbody td {
+      padding: 9px 0;
+      border-bottom: 1px solid #f8fafc;
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    .tabela-ambientes tbody td:nth-child(2) {
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .tabela-ambientes tbody td:last-child {
+      text-align: right;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .tabela-ambientes .amb-nome-laje {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: block;
+    }
+
+    /* ── Produtos avulsos ────────────────────── */
+    .secao-avulsos {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .secao-avulsos-titulo {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .secao-avulsos table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .secao-avulsos td {
+      padding: 4px 0;
+      color: var(--text-sub);
+    }
+
+    .secao-avulsos td:last-child {
+      text-align: right;
+      font-family: 'DM Mono', monospace;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ── Rodapé do card (totais) ─────────────── */
+    .card-orc-footer {
+      background: var(--navy);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .footer-frete {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .footer-frete span {
+      font-family: 'DM Mono', monospace;
+      color: #cbd5e1;
+    }
+
+    .footer-total {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .footer-total small {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .footer-total-valor {
+      color: var(--accent);
+    }
+
+    /* ── Estado vazio ────────────────────────── */
+    .estado-vazio {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* ── Busca de cliente ────────────────────── */
+    .busca-wrapper {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .lista-suspensa {
+      list-style: none;
+      border: 1.5px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--r-md) var(--r-md);
+      background: var(--surface);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .lista-suspensa li {
+      padding: 11px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      transition: background 0.1s;
+    }
+
+    .lista-suspensa li:last-child { border-bottom: none; }
+    .lista-suspensa li:hover { background: var(--primary-dim); }
+
+    @media (max-width: 600px) {
+      .card-orc-header { flex-direction: column; }
+      .card-orc-acoes  { flex-direction: row; align-items: center; width: 100%; justify-content: space-between; }
+    }
+  </style>
 </head>
 <body>
-  <div class="app-container">
-    <div class="screen">
-      <header class="screen-header">
-        <a href="conf.html"><i data-lucide="settings"></i> Configurações</a>
-        <a href="cliente.html"><i data-lucide="user-plus"></i> Novo Cliente</a>
-        <a href="orcamento.html"><i data-lucide="file-plus"></i> Novo Orçamento</a>
-        <a href="consulta.html"><i data-lucide="search"></i> Consultar</a>
-        <a href="historico.html"><i data-lucide="archive"></i> Histórico</a>
-        <a href="#" onclick="logout()"><i data-lucide="log-out"></i> Sair</a>
-      </header>
 
-      <main class="screen-content">
-        <h1><i data-lucide="file-text"></i> Consulta de Orçamentos</h1>
+<div class="app-container">
+<div class="screen">
 
-        <label for="cliente_busca"><i data-lucide="search"></i> Buscar cliente</label>
-        <input id="cliente_busca" placeholder="Digite nome ou WhatsApp" autocomplete="off" oninput="buscarClientesConsulta(this.value)">
+  <!-- HEADER -->
+  <header class="screen-header">
+    <a href="orcamento.html" class="header-logo" style="text-decoration:none;">
+      <img
+        src="https://dtznxqqcyrzlaijjbwzr.supabase.co/storage/v1/object/public/logos/Gemini_Generated_Image_guq5kaguq5kaguq5.png"
+        alt="Logo"
+      >
+      <div>
+        <div class="header-logo-name">Lajes Brasil</div>
+        <div class="header-logo-sub">Orçamentos</div>
+      </div>
+    </a>
 
-        <ul id="listaClientes" class="lista-suspensa"></ul>
+    <a href="conf.html"><i data-lucide="settings"></i> Configurações</a>
+    <a href="cliente.html"><i data-lucide="user-plus"></i> Novo Cliente</a>
+    <a href="orcamento.html"><i data-lucide="file-plus"></i> Novo Orçamento</a>
+    <a href="consulta.html" aria-current="page"><i data-lucide="search"></i> Consultar</a>
+    <a href="historico.html"><i data-lucide="archive"></i> Histórico</a>
+    <a href="#" onclick="logout()"><i data-lucide="log-out"></i> Sair</a>
+  </header>
 
-        <div class="filtros-container" style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
-          <div>
-            <label>Status</label><br>
-              <select id="filtroStatus" onchange="filtrarOrcamentos()">
-                <option value="">Todos</option>
-                <option value="PENDENTE">Pendente</option>
-                <option value="EM_PRODUCAO">Em Produção</option>
-                <option value="PRODUZIDO">Produzido</option>
-                <option value="ENTREGUE">Entregue</option>
-              </select>
-          </div>
-          <div>
-            <label>De</label><br>
-            <input type="date" id="dataInicio" onchange="filtrarOrcamentos()">
-          </div>
-          <div>
-            <label>Até</label><br>
-            <input type="date" id="dataFim" onchange="filtrarOrcamentos()">
-          </div>
+  <!-- CONTEÚDO -->
+  <main class="screen-content">
+
+    <h1>
+      <i data-lucide="search"></i>
+      Consulta de Orçamentos
+    </h1>
+
+    <!-- BUSCA CLIENTE -->
+    <div class="card" style="margin-bottom: 20px;">
+      <label>Buscar cliente</label>
+      <input
+        id="cliente_busca"
+        placeholder="Digite o nome ou WhatsApp..."
+        autocomplete="off"
+        oninput="buscarClientesConsulta(this.value)"
+      >
+      <ul id="listaClientes" class="lista-suspensa" style="display:none;"></ul>
+
+      <!-- FILTROS -->
+      <div class="filtros-container" style="margin-top: 16px; margin-bottom: 0;">
+        <div>
+          <label>Status</label>
+          <select id="filtroStatus" onchange="filtrarOrcamentos()">
+            <option value="">Todos</option>
+            <option value="PENDENTE">Pendente</option>
+            <option value="EM_PRODUCAO">Em Produção</option>
+            <option value="PRODUZIDO">Produzido</option>
+            <option value="ENTREGUE">Entregue</option>
+            <option value="CANCELADO">Cancelado</option>
+          </select>
         </div>
-
-        <div id="orcamentos" class="resultado" style="margin-top:20px;"></div>
-      </main>
+        <div>
+          <label>De</label>
+          <input type="date" id="dataInicio" onchange="filtrarOrcamentos()">
+        </div>
+        <div>
+          <label>Até</label>
+          <input type="date" id="dataFim" onchange="filtrarOrcamentos()">
+        </div>
+      </div>
     </div>
-  </div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      if (window.lucide) lucide.createIcons();
-      if (typeof protegerPaginaAdmin === "function") protegerPaginaAdmin();
-    });
-  </script>
+    <!-- LISTA DE ORÇAMENTOS -->
+    <div id="orcamentos"></div>
+
+  </main>
+
+</div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    lucide.createIcons();
+    if (typeof protegerPaginaAdmin === "function") protegerPaginaAdmin();
+  });
+</script>
+
 </body>
 </html>

@@ -502,8 +502,8 @@ button:not(.btn-remover):not(.btn-sec) svg {
   display: flex;
   justify-content: space-between;
   padding: 4px 0;
-  color: #94a3b8;
-  font-size: 13px;
+  color: #e0e3e7;
+  font-size: 15px;
 }
 
 .resultado .total-resultado {
@@ -514,7 +514,7 @@ button:not(.btn-remover):not(.btn-sec) svg {
   color: #fff;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid #334155;
+  border-top: 1px solid #476ea5;
 }
 
 .resultado .total-resultado span:last-child {
